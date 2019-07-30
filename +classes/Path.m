@@ -21,22 +21,22 @@ classdef Path
             count = 0;
             i = 1;
             while i <= length(measurementPoints)
-                theta = 0;
-                while theta < 2*pi   
-                    robotCenter = services.Math.getRobotCenter(measurementPoints(i, :), theta, P.topographicMap.robot);
-                    
-                    if (P.topographicMap.isFree(robotCenter))
+                theta = -pi;
+                while theta <= pi  
+                    robotPosition = services.Math.getRobotPosition(measurementPoints(i, :), theta, P.topographicMap.robot)
+          
+                    if (P.topographicMap.isFree(robotPosition))
                         count = count + 1;
-                        points(count, :) = [robotCenter(1) robotCenter(2) theta];
+                        points(count, :) = robotPosition;
                         break;
                     end 
                 
-                    theta = theta + 0.2;
+                    theta = theta + (2*pi/36);
                 end 
                 
                 i = i + 1;
             end
-            disp('Robot Center Position in Measurement Points: ');
+            disp('Robot Positions in Measurement Points: ');
             disp(points);
                
             [x, y, phi] = P.robot.getPosition()

@@ -15,22 +15,23 @@ classdef PathPlanning
 %             hold on;
 %             imagesc([-1500 1500], [-1500 1500], topographicMap.map);
             
-            tree(1, :) = [startPoint(1) startPoint(2) 0 0 1];
-            tree(2, :) = [endPoint(1) endPoint(2) 0 0 0];
+            tree(1, :) = [startPoint(1) startPoint(2) startPoint(3) 0 0 1];
+            tree(2, :) = [endPoint(1) endPoint(2) startPoint(3) 0 0 0];
             
             count = 2;
             actualTree = 1;
             k = 1;
-            while k <= 50000
-                sample = [randi([-width/2 width/2]) randi([-height/2 height/2])];
+            figure;
+            while k <= 50
+                sample = [randi([-width/2 width/2]) randi([-height/2 height/2]) (randi([-314 314])/100)];
 
                 [nearstNode, index] = services.PathPlanning.getNearestNode(sample, tree, actualTree);
-                newNode = services.PathPlanning.generateNewNode(nearstNode, sample, step);
+                newNode = services.PathPlanning.generateNewNode(nearstNode, sample, step)
                 [idParent, distance] = services.PathPlanning.getParent(newNode, tree, actualTree, beta, topographicMap, measurement);
                 if (idParent ~= 0)
 %                     plot(newNode(1), newNode(2), 'o');
                     count = count + 1;
-                    tree(count, :) = [newNode(1) newNode(2) idParent distance actualTree];
+                    tree(count, :) = [newNode(1) newNode(2) newNode(3) idParent distance actualTree];
                     tree = services.PathPlanning.reWrite(count, newNode, tree, actualTree, beta, topographicMap, measurement);
 
                     if (actualTree == 1)
@@ -110,10 +111,10 @@ classdef PathPlanning
                 parentIndex = tree(index, 3);
                 count = count + 1;
                 if (parentIndex ~= 0)
-                    path(count, :) = [tree(index, 1) tree(index, 2)];
+                    path(count, :) = [tree(index, 1) tree(index, 2) tree(index, 3)];
                     index = parentIndex;
                 else
-                    path(count, :) = [tree(index, 1) tree(index, 2)];
+                    path(count, :) = [tree(index, 1) tree(index, 2) tree(index, 3)];
                     finished = true;
                 end
             end  
@@ -124,10 +125,10 @@ classdef PathPlanning
                 parentIndex = tree(index, 3);
                 count = count + 1;
                 if (parentIndex ~= 0)
-                    path(count, :) = [tree(index, 1) tree(index, 2)];
+                    path(count, :) = [tree(index, 1) tree(index, 2) tree(index, 3)];
                     index = parentIndex;
                 else
-                    path(count, :) = [tree(index, 1) tree(index, 2)];
+                    path(count, :) = [tree(index, 1) tree(index, 2) tree(index, 3)];
                     finished = true;
                 end
             end
@@ -142,11 +143,11 @@ classdef PathPlanning
             idParent = 0;
             minDistance = 1000000;
             for i = 1: lastIndexTree
-                if (tree(i, 5) == actualTree)
-                    Spoint = [tree(i,1) tree(i,2)];
+                if (tree(i, 6) == actualTree)
+                    Spoint = [tree(i,1) tree(i,2) tree(i,3)];
                     distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2)^0.5; 
                     if (distance < beta)    
-                        distance = distance + tree(i, 4);
+                        distance = distance + tree(i, 5);
                         if (minDistance == 1000000)
                             if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap))
                                 idParent = i;
@@ -170,16 +171,16 @@ classdef PathPlanning
             lastIndexTree = aux(1);
 
             for i = 1: lastIndexTree
-                if (tree(i, 5) == actualTree)
+                if (tree(i, 6) == actualTree)
                     if (i ~= newNodeIndex)
                         Spoint = [tree(i,1) tree(i,2)];
                         distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2)^0.5; 
                         if (distance < beta)    
-                            distance = distance + tree(newNodeIndex, 4);
-                            if (distance < tree(i, 4))
+                            distance = distance + tree(newNodeIndex, 5);
+                            if (distance < tree(i, 5))
                                 if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap))
-                                    tree(i, 3) = newNodeIndex;
-                                    tree(i, 4) = distance;
+                                    tree(i, 4) = newNodeIndex;
+                                    tree(i, 5) = distance;
                                 end
                             end
                         end
@@ -192,7 +193,7 @@ classdef PathPlanning
             vector = sample - nearstNode;
             vector = vector / norm(vector);
             
-            newNode = nearstNode + step*vector;
+            newNode = nearstNode + step*[vector(1) vector(2) 0] + (step/50)*[0 0 vector(3)];
         end
         
         function [nearest_node, index] = getNearestNode(newNode, tree, actualTree) 
@@ -201,16 +202,54 @@ classdef PathPlanning
 
             minDistance = 1000000;
             for i = 1:lastIndexTree
-                if (tree(i, 5) == actualTree)
+                if (tree(i, 6) == actualTree)
                     if minDistance == 1000000
                         index = i;
-                        nearest_node = [tree(i, 1) tree(i, 2)];
-                        minDistance = ((newNode(1) - tree(i, 1))^2 + (newNode(2) - tree(i, 2))^2)^0.5;
+                        nearest_node = [tree(i, 1) tree(i, 2) tree(i, 3)];
+                        if(tree(i, 3) >= 0 && newNode(3) >= 0)
+                            angleError = tree(i, 3) - newNode(3);
+                        elseif(tree(i, 3) < 0 && newNode(3) >= 0)
+                            positiveDistance = 2*pi - newNode(3) + tree(i, 3);
+                            if(positiveDistance <= pi)
+                                angleError = positiveDistance;
+                            else
+                                angleError = newNode(3) - tree(i, 3);
+                            end
+                        elseif(tree(i, 3) >= 0 && newNode(3) < 0)
+                            positiveDistance = tree(i, 3) - newNode(3);
+                            if(positiveDistance <= pi)
+                                angleError = positiveDistance;
+                            else
+                                angleError = 2*pi + newNode(3) - tree(i, 3);
+                            end                            
+                        elseif(tree(i, 3) < 0 && newNode(3) < 0)
+                            angleError = tree(i, 3) - newNode(3);
+                        end
+                        minDistance = ((newNode(1) - tree(i, 1))^2 + (newNode(2) - tree(i, 2))^2 + angleError^2)^0.5;
                     else
-                        distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2)^0.5;
+                        if(tree(i, 3) >= 0 && newNode(3) >= 0)
+                            angleError = tree(i, 3) - newNode(3);
+                        elseif(tree(i, 3) < 0 && newNode(3) >= 0)
+                            positiveDistance = 2*pi - newNode(3) + tree(i, 3);
+                            if(positiveDistance <= pi)
+                                angleError = positiveDistance;
+                            else
+                                angleError = newNode(3) - tree(i, 3);
+                            end
+                        elseif(tree(i, 3) >= 0 && newNode(3) < 0)
+                            positiveDistance = tree(i, 3) - newNode(3);
+                            if(positiveDistance <= pi)
+                                angleError = positiveDistance;
+                            else
+                                angleError = 2*pi + newNode(3) - tree(i, 3);
+                            end                            
+                        elseif(tree(i, 3) < 0 && newNode(3) < 0)
+                            angleError = tree(i, 3) - newNode(3);
+                        end
+                        distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2 + angleError^2)^0.5;
                         if (distance < minDistance)
                             index = i;
-                            nearest_node = [tree(i, 1) tree(i, 2)];
+                            nearest_node = [tree(i, 1) tree(i, 2) tree(i, 3)];
                             minDistance = distance;
                         end
                     end                
@@ -230,7 +269,7 @@ classdef PathPlanning
             response = false;
             t = 0;
             while t <= 1
-                point = startPoint + t*vector;
+                point = startPoint + t*vector
                 
                 if (~topographicMap.isFree(point))
                     response = true;

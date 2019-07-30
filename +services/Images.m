@@ -12,36 +12,37 @@ classdef Images
             se0 = strel('line',5,0);
             BWsdil = imdilate(BW1,[se90 se0]);
             BWdfill = imfill(BWsdil,'holes');
-            img = bwareafilt(BWdfill, 3);
+            img = bwareafilt(BWdfill, 2);
+            imwrite(imcomplement(img),'storage/real_topographic_map.png')
             imageSize = size(img);
             
-%             count = 0;
-%             points = [];
-%             for i=1:imageSize(1)
-%                 for j=1:imageSize(2)
-%                     if (img(i,j) == 1)
-%                         circleCenter = cameras.getRealPosition([j i], 0);
-%                         for theta = 0:(pi/15):2*pi
-%                             circlePosition = circleCenter + 185*[cos(theta) sin(theta) 0];
-%                             circlePosition = [circlePosition(1) ; circlePosition(2) ; circlePosition(3)];
-%                             realPixelPosition = cameras.getRealPixelPosition(circlePosition);
-%                             realPixelPosition(1) = floor(realPixelPosition(1));
-%                             realPixelPosition(2) = floor(realPixelPosition(2));
-%                             if((realPixelPosition(1) >= 1 && realPixelPosition(1) <= imageSize(2)) && (realPixelPosition(2) >= 1 && realPixelPosition(2) <= imageSize(1)))
-%                                 count = count + 1;
-%                                 points(count, :) = [realPixelPosition(2) realPixelPosition(1)];
-%                             end
-%                         end
-%                     end
-%                 end     
-%             end
-%             
-%             if(count > 0)
-%                 for i = 1:length(points)
-%                     img(points(i,1), points(i,2)) = 1; 
-%                 end
-%             end
-figure;
+            count = 0;
+            points = [];
+            for i=1:imageSize(1)
+                for j=1:imageSize(2)
+                    if (img(i,j) == 1)
+                        circleCenter = cameras.getRealPosition([j i], 0);
+                        for theta = 0:(pi/15):2*pi
+                            circlePosition = circleCenter + 185*[cos(theta) sin(theta) 0];
+                            circlePosition = [circlePosition(1) ; circlePosition(2) ; circlePosition(3)];
+                            realPixelPosition = cameras.getRealPixelPosition(circlePosition);
+                            realPixelPosition(1) = floor(realPixelPosition(1));
+                            realPixelPosition(2) = floor(realPixelPosition(2));
+                            if((realPixelPosition(1) >= 1 && realPixelPosition(1) <= imageSize(2)) && (realPixelPosition(2) >= 1 && realPixelPosition(2) <= imageSize(1)))
+                                count = count + 1;
+                                points(count, :) = [realPixelPosition(2) realPixelPosition(1)];
+                            end
+                        end
+                    end
+                end     
+            end
+            
+            if(count > 0)
+                for i = 1:length(points)
+                    img(points(i,1), points(i,2)) = 1; 
+                end
+            end
+            figure;
             img = imfill(img,'holes');
             seD = strel('diamond',1);
             img = imerode(img,seD);

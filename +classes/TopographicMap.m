@@ -1,17 +1,19 @@
 classdef TopographicMap
     properties
         map;
+        realMap;
         robot;
     end
     
     methods
         function T = TopographicMap(robot)
             T.map = services.Storage.getTopographicMap;
+            T.realMap = services.Storage.getRealTopographicMap;
             T.robot = robot;
         end
         
-        function response = isFree(T, point)
-            pixelPosition = T.robot.cameras.getRealPixelPosition([point(1) ; point(2) ; 0])
+        function response = isFree(T, robotPosition)
+            pixelPosition = T.robot.cameras.getRealPixelPosition([robotPosition(1) ; robotPosition(2) ; 0]);
             pixelPosition = [floor(pixelPosition(1)) floor(pixelPosition(2))]; 
             response = false;
             mapSize = size(T.map);
@@ -20,10 +22,25 @@ classdef TopographicMap
                     response = true;
                 end
             end
+
+            if (response && ~isempty(T.robot.toolZone))
+                for i = 1:length(T.robot.toolZone)
+                    point = [robotPosition(1) robotPosition(2)] + [cos(robotPosition(3) + T.robot.toolZone(i,1))*T.robot.toolZone(i,2) sin(robotPosition(3) + T.robot.toolZone(i,1))*T.robot.toolZone(i,2)];
+                    pixelPosition = T.robot.cameras.getRealPixelPosition([point(1) ; point(2) ; 0]);
+                    pixelPosition = [floor(pixelPosition(1)) floor(pixelPosition(2))];  
+                    if ((pixelPosition(1) > 1 && pixelPosition(2) > 1) && (pixelPosition(2) <= mapSize(1) && pixelPosition(1) <= mapSize(2)))
+                        if (T.realMap(pixelPosition(2), pixelPosition(1)) == 0)
+                            response = false;
+                            break;
+                        end
+                    end  
+                end
+            end
         end
         
         function display(T)
-            disp('image: '); disp(T.map);
+            disp('topographicMap: '); disp(T.map);
+            disp('realTopographicMap: '); disp(T.realMap);
             disp('robot: '); disp(T.robot);
         end
         
@@ -31,6 +48,13 @@ classdef TopographicMap
         function T = set.map(T, value)
             if (services.Validator.isImage(value, ''))
                 T.map = value;
+            else
+                error('Invalid image');
+            end
+        end
+        function T = set.realMap(T, value)
+            if (services.Validator.isImage(value, ''))
+                T.realMap = value;
             else
                 error('Invalid image');
             end

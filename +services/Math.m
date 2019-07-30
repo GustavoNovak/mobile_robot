@@ -34,7 +34,7 @@ classdef Math
 %             
 %         end
         
-        function robotCenter = getRobotCenter(sensorsPosition, theta, robot)
+        function robotCenter = getRobotPosition(sensorsPosition, theta, robot)
             sensorsRobotPosition = robot.sensorsPosition;
             neutralTheta = atan2(sensorsRobotPosition(2), sensorsRobotPosition(1));
             lengthSensorsVector = (sensorsRobotPosition(1)^2 + sensorsRobotPosition(2)^2)^0.5;
@@ -42,6 +42,7 @@ classdef Math
             robotCenter = [
                 sensorsPosition(1) - lengthSensorsVector*cos(theta + neutralTheta) 
                 sensorsPosition(2) - lengthSensorsVector*sin(theta + neutralTheta) 
+                theta
             ];    
         end
     end
