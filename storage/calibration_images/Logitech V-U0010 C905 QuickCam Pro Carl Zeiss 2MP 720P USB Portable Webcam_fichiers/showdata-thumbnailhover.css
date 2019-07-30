@@ -1,0 +1,6 @@
+a[data-on-hover-show][data-on-hover-fade="true"] img {
+	-webkit-transition: opacity .2s ease-in-out .2s;
+	-moz-transition: opacity .2s ease-in-out .2s;
+	-o-transition: opacity .2s ease-in-out .2s;
+	transition: opacity .2s ease-in-out .2s;
+}

@@ -1,0 +1,481 @@
+﻿/* #Flex Styles
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.flex-grid,
+.flex-display {
+	display: flex;        
+	display: -webkit-box;  
+	display: -ms-flexbox;  
+	display: -webkit-flex; 
+}
+
+.flex-align-baseline {
+	align-items: baseline;
+		-webkit-box-align: baseline;
+        -ms-flex-align: baseline;
+}
+
+.flex-align-start {
+	align-items: flex-start;
+		-webkit-box-align: start;
+        -ms-flex-align: start;
+}
+
+.flex-align-center {
+	align-items: center;
+		-webkit-box-align: center;
+		-ms-flex-align: center;
+}
+
+.flex-align-flex-end {
+	align-items: flex-end;
+		-webkit-box-align: end;
+        -ms-flex-align: end;
+}
+
+.flex-justify-center {
+	justify-content: center;
+		-webkit-box-pack: center;
+		-ms-flex-pack: center;
+}
+
+.flex-justify-space-between {
+	justify-content: space-between;
+		-webkit-box-pack: justify;
+		-ms-flex-pack: justify;
+}
+
+.flex-justify-space-evenly {
+	justify-content: space-evenly;
+		-webkit-box-pack: space-evenly;
+    	-ms-flex-pack: space-evenly;
+}
+
+.flex-justify-space-around {
+	justify-content: space-around;
+		-webkit-justify-content: space-around;
+		-ms-flex-pack: distribute;
+}
+
+.flex-justify-end {
+	justify-content: flex-end;
+		-webkit-box-pack: end;
+		-ms-flex-pack: end;
+}
+
+.flex-wrap-wrap {
+	flex-wrap: wrap;
+		-ms-flex-wrap: wrap;
+}
+
+.flex-direction-column {
+	flex-direction: column;
+		-webkit-box-orient: vertical;
+		-webkit-box-direction: normal;
+		-ms-flex-direction: column;
+}
+
+
+
+
+
+
+@media (min-width: 780px) {  
+    /* Grid Styles - Table of contents
+    ––––––––––––––––––––––––––––––––––––––––––––––––––
+    - #Container Spacing
+    - #Flex Spacing
+    - #Desktop Column Widths
+    - #Utility Spacing
+    - #Typography 
+    */  
+
+
+
+    /* #Container Spacing
+    –––––––––––––––––––––––––––––––––––––––––––––––––– */   
+    .container,
+    .banner-container,
+    .header-bar,
+    .main-content-webpage,
+    .main-content-general,
+    .main-content-cart,
+    .main-content-search,
+    .category-prod-section {
+    	margin-left: auto;
+    	margin-right: auto;
+    	max-width: 148rem;
+    	padding-left: 4rem;
+    	padding-right: 4rem;
+    }
+    
+    .main-content-webpage,
+    .main-content-general,
+    .main-content-cart,
+    .main-content-search {
+    	padding-bottom: 4rem;
+    	padding-top: 4rem;
+    }
+
+
+
+    /* #Flex Spacing
+    –––––––––––––––––––––––––––––––––––––––––––––––––– */   
+    .flex-grid {margin-left: -3rem;}
+
+    .flex-col {padding-left: 3rem;}
+
+
+
+    /* #Desktop Column Widths
+    –––––––––––––––––––––––––––––––––––––––––––––––––– */   
+    .d-col-1 {
+        flex-basis: 8.333%;
+        max-width: 8.333%;
+        -ms-flex-preferred-size: 8.333%;
+    }
+
+    .d-col-2 {
+        flex-basis: 16.66%;
+        max-width: 16.66%;
+        -ms-flex-preferred-size: 16.66%;
+    }
+
+    .d-col-3, 
+    .d-col-thirds {
+        flex-basis: 25%;
+        max-width: 25%;
+        -ms-flex-preferred-size: 25%;
+    }
+
+    .d-col-4, 
+    .d-col-quarters {
+        flex-basis: 33.33%;
+        max-width: 33.33%;
+        -ms-flex-preferred-size: 33.33%;
+    }
+
+    .d-col-5 {
+        flex-basis: 41.66%;
+        max-width: 41.66%;
+        -ms-flex-preferred-size: 41.66%;
+    }
+
+    .d-col-6, 
+    .d-col-halfs {
+        flex-basis: 50%;
+        max-width: 50%;
+        -ms-flex-preferred-size: 50%;
+    }
+
+    .d-col-7 {
+        flex-basis: 58.33%;
+        max-width: 58.33%;
+        -ms-flex-preferred-size: 58.33%;
+    }
+
+    .d-col-8 {
+        flex-basis: 66.66%;
+        max-width: 66.66%;
+        -ms-flex-preferred-size: 66.66%;
+    }
+
+    .d-col-9 {
+        flex-basis: 75%;
+        max-width: 75%;
+        -ms-flex-preferred-size: 75%;
+    }
+
+    .d-col-10 {
+        flex-basis: 83.33%;
+        max-width: 83.33%;
+        -ms-flex-preferred-size: 83.33%;
+    }
+
+    .d-col-11 {
+        flex-basis: 91.66%;
+        max-width: 91.66%;
+        -ms-flex-preferred-size: 91.66%;
+    }
+
+    .d-col-12, 
+    .d-col-full {
+        flex-basis: 100%;
+        max-width: 100%;
+        -ms-flex-preferred-size: 100%;
+    }
+
+
+
+    /* #Utility Spacing
+    –––––––––––––––––––––––––––––––––––––––––––––––––– */
+    /* Margin Top Utilities */
+    .s-margin-top-d 					{margin-top: 1.2rem;}
+    .m-margin-top-d 					{margin-top: 2rem;}
+    .l-margin-top-d 					{margin-top: 3rem;}
+    .xl-margin-top-d 				    {margin-top: 4rem;}
+    .xxl-margin-top-d 				    {margin-top: 8rem;}
+
+    /* Margin Right Utilities */
+    .s-margin-right-d 					{margin-right: 1.2rem;}
+    .m-margin-right-d 	 			 	{margin-right: 2rem;}
+    .l-margin-right-d 					{margin-right: 3rem;}
+    .xl-margin-right-d 					{margin-right: 4rem;}
+    .xxl-margin-right-d 				{margin-right: 8rem;}
+
+    /* Margin Bottom Utilities */
+    .s-margin-btm-d 					{margin-bottom: 1.2rem;}
+    .m-margin-btm-d 					{margin-bottom: 2rem;}
+    .l-margin-btm-d 					{margin-bottom: 3rem;}
+    .xl-margin-btm-d					{margin-bottom: 4rem;}
+    .xxl-margin-btm-d					{margin-bottom: 8rem;}
+
+    /* Margin Left Utilities */
+    .s-margin-left-d 					{margin-left: 1.2rem;}
+    .m-margin-left-d 					{margin-left: 2rem;}
+    .l-margin-left-d 					{margin-left: 3rem;}
+    .xl-margin-left-d 					{margin-left: 4rem;}
+    .xxl-margin-left-d 					{margin-left: 8rem;}
+
+    /* Padding Top Utilities */
+    .s-padding-top-d 					{padding-top: 1.2rem;}
+    .m-padding-top-d 					{padding-top: 2rem;}
+    .l-padding-top-d 					{padding-top: 3rem;}
+    .xl-padding-top-d 					{padding-top: 4rem;}
+    .xxl-padding-top-d 					{padding-top: 8rem;}
+
+    /* Padding Right Utilities */
+    .s-padding-right-d 					{padding-right: 1.2rem;}
+    .m-padding-right-d 					{padding-right: 2rem;}
+    .l-padding-right-d 					{padding-right: 3rem;}
+    .xl-padding-right-d 				{padding-right: 4rem;}
+    .xxl-padding-right-d 				{padding-right: 8rem;}
+
+    /* Padding Bottom Utilities */
+    .s-padding-btm-d 					{padding-bottom: 1.2rem;}
+    .m-padding-btm-d 					{padding-bottom: 2rem;}
+    .l-padding-btm-d 					{padding-bottom: 3rem;}
+    .xl-padding-btm-d					{padding-bottom: 4rem;}
+    .xxl-padding-btm-d					{padding-bottom: 8rem;}
+
+    /* Padding Left Utilities */
+    .s-padding-left-d 					{padding-left: 1.2rem;}
+    .m-padding-left-d 					{padding-left: 2rem;}
+    .l-padding-left-d 					{padding-left: 3rem;}
+    .xl-padding-left-d 					{padding-left: 4rem;}
+    .xxl-padding-left-d 				{padding-left: 8rem;}
+
+    /* Padding Full Utilities */
+    .s-padding-full-d 					{padding: 1.2rem;}
+    .m-padding-full-d 					{padding: 2rem;}
+    .l-padding-full-d 					{padding: 3rem;}
+    .xl-padding-full-d 					{padding: 4rem;}
+    .xxl-padding-full-d 				{padding: 8rem;}
+
+
+
+    /* #Typography 
+    –––––––––––––––––––––––––––––––––––––––––––––––––– */
+    h1, .section-title {font-size: 2.6rem;}
+    h2 {font-size: 2.4rem;}
+    h3 {font-size: 2.2rem;}
+    h4 {font-size: 2.0rem;}
+    h5 {font-size: 1.8rem;}
+    h6 {font-size: 1.6rem;}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+@media only screen and (min-width: 0px) and (max-width: 779px) {
+    /* Grid Styles - Table of contents
+    ––––––––––––––––––––––––––––––––––––––––––––––––––
+    - #Container Spacing
+    - #Flex Spacing
+    - #Mobile Column Widths
+    - #Utility Spacing
+    - #Typography 
+    */  
+    
+    
+    
+    /* #Container Spacing
+    –––––––––––––––––––––––––––––––––––––––––––––––––– */
+	.container,
+	.header-container,
+    .main-content-webpage,
+    .main-content-general,
+    .main-content-cart,
+    .main-content-search {
+		padding-left: 2rem;
+		padding-right: 2rem;
+	}
+	
+	.main-content-webpage,
+    .main-content-general,
+    .main-content-cart,
+    .main-content-search {
+    	padding-bottom: 4rem;
+    	padding-top: 4rem;
+    }
+    
+    
+    
+    /* #Flex Spacing
+    –––––––––––––––––––––––––––––––––––––––––––––––––– */
+	.flex-grid {margin-left: -2rem;}
+		
+	.flex-col {padding-left: 2rem;}
+    
+    
+    
+    /* #Mobile Column Widths
+    –––––––––––––––––––––––––––––––––––––––––––––––––– */
+	.m-col-3 {
+		flex-basis: 25%;
+		max-width: 25%;
+		-ms-flex-preferred-size: 25%;
+	}
+	
+	.m-col-4 {
+		flex-basis: 33.33%;
+		max-width: 33.33%;
+		-ms-flex-preferred-size: 33.33%;
+	}
+		
+	.m-col-6 {
+		flex-basis: 50%;
+		max-width: 50%;
+		-ms-flex-preferred-size: 50%;
+	}
+		
+	.m-col-12 {
+		flex-basis: 100%;
+		max-width: 100%;
+		-ms-flex-preferred-size: 100%;
+	}
+    
+    
+    
+    /* #Utilities Styles
+	–––––––––––––––––––––––––––––––––––––––––––––––––– */
+	/* Margin Top Utilities */
+	.s-margin-top-m 					{margin-top: 0.7rem;}
+	.m-margin-top-m 					{margin-top: 1rem;}
+	.l-margin-top-m 					{margin-top: 2rem;}
+	.xl-margin-top-m 				    {margin-top: 3rem;}
+	.xxl-margin-top-m 				    {margin-top: 6rem;}
+	
+	/* Margin Right Utilities */
+	.s-margin-right-m 					{margin-right: 0.7rem;}
+	.m-margin-right-m 	 			 	{margin-right: 1rem;}
+	.l-margin-right-m 					{margin-right: 2rem;}
+	.xl-margin-right-m 					{margin-right: 3rem;}
+	.xxl-margin-right-m 			    {margin-right: 6rem;}
+	
+	/* Margin Bottom Utilities */
+	.s-margin-btm-m 					{margin-bottom: 0.7rem;}
+	.m-margin-btm-m 					{margin-bottom: 1rem;}
+	.l-margin-btm-m 					{margin-bottom: 2rem;}
+	.xl-margin-btm-m					{margin-bottom: 3rem;}
+	.xxl-margin-btm-m					{margin-bottom: 6rem;}
+	
+	/* Margin Left Utilities */
+	.s-margin-left-m 					{margin-left: 0.7rem;}
+	.m-margin-left-m 					{margin-left: 1rem;}
+	.l-margin-left-m 					{margin-left: 2rem;}
+	.xl-margin-left-m 					{margin-left: 3rem;}
+	.xxl-margin-left-m 				    {margin-left: 6rem;}
+	
+	/* Padding Top Utilities */
+	.s-padding-top-m 					{padding-top: 0.7rem;}
+	.m-padding-top-m 					{padding-top: 1rem;}
+	.l-padding-top-m 					{padding-top: 2rem;}
+	.xl-padding-top-m 					{padding-top: 3rem;}
+	.xxl-padding-top-m 				    {padding-top: 6rem;}
+	
+	/* Padding Right Utilities */
+	.s-padding-right-m 					{padding-right: 0.7rem;}
+	.m-padding-right-m 					{padding-right: 1rem;}
+	.l-padding-right-m 					{padding-right: 2rem;}
+	.xl-padding-right-m 				{padding-right: 3rem;}
+	.xxl-padding-right-m			    {padding-right: 6rem;}
+	
+	/* Padding Bottom Utilities */
+	.s-padding-btm-m 					{padding-bottom: 0.7rem;}
+	.m-padding-btm-m 					{padding-bottom: 1rem;}
+	.l-padding-btm-m 					{padding-bottom: 2rem;}
+	.xl-padding-btm-m					{padding-bottom: 3rem;}
+	.xxl-padding-btm-m 					{padding-bottom: 6rem;}
+	
+	/* Padding Left Utilities */
+	.s-padding-left-m 					{padding-left: 0.7rem;}
+	.m-padding-left-m 					{padding-left: 1rem;}
+	.l-padding-left-m 					{padding-left: 2rem;}
+	.xl-padding-left-m 					{padding-left: 3rem;}
+	.xxl-padding-left-m				    {padding-left: 6rem;}
+	
+	/* Padding Full Utilities */
+	.s-padding-full-m 					{padding: 0.7rem;}
+	.m-padding-full-m 					{padding: 1rem;}
+	.l-padding-full-m 					{padding: 2rem;}
+	.xl-padding-full-m 					{padding: 3rem;}
+	.xxl-padding-full-m				    {padding: 6rem;}
+    
+    
+    
+    /* #Typography 
+	–––––––––––––––––––––––––––––––––––––––––––––––––– */
+	h1, .section-title {font-size: 2rem;}
+	h2 {font-size: 1.9rem;}
+	h3 {font-size: 1.8rem;}
+	h4 {font-size: 1.7rem;}
+	h5 {font-size: 1.6rem;}
+	h6 {font-size: 1.5rem;}
+}
+
+
+
+
+@media only screen and (min-width: 660px) and (max-width: 1200px) {
+    /* Grid Styles - Table of contents
+    ––––––––––––––––––––––––––––––––––––––––––––––––––
+    - #Tablet Column Widths 
+    */  
+    
+    
+    
+	/* #Tablet Column Widths
+	–––––––––––––––––––––––––––––––––––––––––––––––––– */
+	.t-col-3 {
+		flex-basis: 25%;
+		max-width: 25%;
+		-ms-flex-preferred-size: 25%;
+	}
+	
+	.t-col-4 {
+		flex-basis: 33.33%;
+		max-width: 33.33%;
+		-ms-flex-preferred-size: 33.33%;
+	}
+		
+	.t-col-6 {
+		flex-basis: 50%;
+		max-width: 50%;
+		-ms-flex-preferred-size: 50%;
+	}
+		
+	.t-col-12 {
+		flex-basis: 100%;
+		max-width: 100%;
+		-ms-flex-preferred-size: 100%;
+	}
+}
