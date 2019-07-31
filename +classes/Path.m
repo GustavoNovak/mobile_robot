@@ -40,32 +40,37 @@ classdef Path
             disp(points);
                
             [x, y, phi] = P.robot.getPosition()
-            oldPhi = phi;
             
             path1 = services.PathPlanning.generatePath([x y phi], points(1, :), P.topographicMap, P.measurement);
             count = 0;
-            for i = 1: length(path1)
+            lengthPath1 = size(path1);
+            lengthPath1 = lengthPath1(1);
+            for i = 1: lengthPath1
                 if (i > 1)
                     count = count + 1;
-                    if (i < length(path1))
-                        path(count, :) = [path1(i, 1) path1(i, 2) oldPhi 0];
+                    if (i < lengthPath1)
+                        path(count, :) = [path1(i, 1) path1(i, 2) path1(i, 3) 0];
                     else
-                        oldPhi = points(1, 3);
-                        path(count, :) = [path1(i, 1) path1(i, 2) points(1, 3) 1];
+                        path(count, :) = [path1(i, 1) path1(i, 2) path1(i, 3) 1];
                     end
                 end
             end
             
-            if (length(points) > 1)
-                for j = 1: (length(points)-1)
+            lengthPoints = size(points);
+            lengthPoints = lengthPoints(1);
+            if (lengthPoints > 1)
+                for j = 1: (lengthPoints-1)
+                    j
                     newPath = services.PathPlanning.generatePath(points(j, :), points(j+1, :), P.topographicMap, P.measurement);
-                    for i = 1: length(newPath)
+                    lengthNewPath = size(newPath);
+                    lengthNewPath = lengthNewPath(1);                    
+                    for i = 1: lengthNewPath
                         if (i > 1)
                             count = count + 1;
-                            if (i < length(newPath))
-                                path(count, :) = [newPath(i, 1) newPath(i, 2) oldPhi 0]; 
+                            if (i < lengthNewPath)
+                                path(count, :) = [newPath(i, 1) newPath(i, 2) newPath(i, 3) 0]; 
                             else
-                                path(count, :) = [newPath(i, 1) newPath(i, 2) points(j+1, 3) 1]; 
+                                path(count, :) = [newPath(i, 1) newPath(i, 2) newPath(i, 3) 1]; 
                             end
                         end
                     end
@@ -79,8 +84,8 @@ classdef Path
                 plot([startPixelPosition(1) endPixelPosition(1)], [startPixelPosition(2) endPixelPosition(2)], '*-');
             end
             
-            for i = 1:length(points)
-                pixelPosition = P.robot.cameras.getRealPixelPosition([path(i, 1) ; path(i, 2) ; 0]);
+            for i = 1:lengthPoints
+                pixelPosition = P.robot.cameras.getRealPixelPosition([points(i, 1) ; points(i, 2) ; 0]);
                 plot(pixelPosition(1), pixelPosition(2), 'o');
             end
         end

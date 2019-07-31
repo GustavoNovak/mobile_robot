@@ -101,7 +101,7 @@ classdef Index
                 -0.0564 243.951 ; 
                 -0.0564 260.414 ; 
                 ];
-            robot = classes.Robot(300, toolZone, [100 0], 60, 0.1);    
+            robot = classes.Robot(300, toolZone, [430 0], 60, 0.1);    
             try
                 measurement = classes.Measurement('mesh', [230 230], [-1000 1000 ; 1000 1000 ; 1000 -1000 ; -1000 -1000]);
                 topographicMap = classes.TopographicMap(robot);

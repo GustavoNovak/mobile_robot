@@ -9,24 +9,25 @@ classdef PathPlanning
             beta = 100;
             [width, height] = measurement.getChamberSize();
             solutionFound = false;
-            
+            if (~topographicMap.isFree(endPoint))
+                disp('colision endPoint');
+            end
             % Generating RRT*-double-optimized path
 %             figure;
 %             hold on;
 %             imagesc([-1500 1500], [-1500 1500], topographicMap.map);
             
             tree(1, :) = [startPoint(1) startPoint(2) startPoint(3) 0 0 1];
-            tree(2, :) = [endPoint(1) endPoint(2) startPoint(3) 0 0 0];
+            tree(2, :) = [endPoint(1) endPoint(2) endPoint(3) 0 0 0];
             
             count = 2;
             actualTree = 1;
             k = 1;
-            figure;
-            while k <= 50
+            while k <= 500
                 sample = [randi([-width/2 width/2]) randi([-height/2 height/2]) (randi([-314 314])/100)];
 
                 [nearstNode, index] = services.PathPlanning.getNearestNode(sample, tree, actualTree);
-                newNode = services.PathPlanning.generateNewNode(nearstNode, sample, step)
+                newNode = services.PathPlanning.generateNewNode(nearstNode, sample, step);
                 [idParent, distance] = services.PathPlanning.getParent(newNode, tree, actualTree, beta, topographicMap, measurement);
                 if (idParent ~= 0)
 %                     plot(newNode(1), newNode(2), 'o');
@@ -108,7 +109,7 @@ classdef PathPlanning
             finished = false;
             index = indexEndTree;
             while finished == false
-                parentIndex = tree(index, 3);
+                parentIndex = tree(index, 4);
                 count = count + 1;
                 if (parentIndex ~= 0)
                     path(count, :) = [tree(index, 1) tree(index, 2) tree(index, 3)];
@@ -122,7 +123,7 @@ classdef PathPlanning
             finished = false;
             index = indexStartTree;
             while finished == false
-                parentIndex = tree(index, 3);
+                parentIndex = tree(index, 4);
                 count = count + 1;
                 if (parentIndex ~= 0)
                     path(count, :) = [tree(index, 1) tree(index, 2) tree(index, 3)];
@@ -193,7 +194,7 @@ classdef PathPlanning
             vector = sample - nearstNode;
             vector = vector / norm(vector);
             
-            newNode = nearstNode + step*[vector(1) vector(2) 0] + (step/50)*[0 0 vector(3)];
+            newNode = nearstNode + step*[vector(1) vector(2) 0] + (step/10)*[0 0 vector(3)];
         end
         
         function [nearest_node, index] = getNearestNode(newNode, tree, actualTree) 
@@ -269,7 +270,7 @@ classdef PathPlanning
             response = false;
             t = 0;
             while t <= 1
-                point = startPoint + t*vector
+                point = startPoint + t*vector;
                 
                 if (~topographicMap.isFree(point))
                     response = true;

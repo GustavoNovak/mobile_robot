@@ -14,7 +14,7 @@ classdef Robot
             R.connection = tcpclient('127.0.0.1', 444);
             R.cameras = classes.Cameras();
             R.diameter = diameter;
-            R.toolZone = toolZone;
+            R.toolZone = R.generateToolZone(toolZone);
             R.sensorsPosition = sensorsPosition;
             R.maxLinearVelocity = maxLinearVelocity;
             R.maxAngularVelocity = maxAngularVelocity;

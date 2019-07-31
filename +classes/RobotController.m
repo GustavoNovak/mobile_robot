@@ -13,7 +13,7 @@ classdef RobotController
         function moveInPath(R)
             Kp = 1.5;
             Ki = 0.0;
-            Kp_phi = 1.1;
+            Kp_phi = 1.3;
             Ki_phi = 0.0;
             for i=1:length(R.path)
                 if (R.path(i,4) == 0) 
@@ -103,15 +103,29 @@ classdef RobotController
                             t = toc
 %                             oldErrorX = errorX;
 %                             oldErrorY = errorY;
+                            
                             oldErrorPhi = errorPhi;
 %                             errorX = R.path(i, 1) - x; 
 %                             errorY = R.path(i, 2) - y;
-                            if(R.path(i, 3) > pi)
-                                angleReference = pi - R.path(i, 3);
-                            else
-                                angleReference = R.path(i, 3);
+                            if(R.path(i, 3) >= 0 && phi >= 0)
+                                errorPhi = R.path(i, 3) - phi;
+                            elseif(R.path(i, 3) < 0 && phi >= 0)
+                                positiveDistance = 2*pi - phi + R.path(i, 3);
+                                if(positiveDistance <= pi)
+                                    errorPhi = positiveDistance;
+                                else
+                                    errorPhi = phi - R.path(i, 3);
+                                end
+                            elseif(R.path(i, 3) >= 0 && phi < 0)
+                                positiveDistance = R.path(i, 3) - phi;
+                                if(positiveDistance <= pi)
+                                    errorPhi = positiveDistance;
+                                else
+                                    errorPhi = 2*pi + phi - R.path(i, 3);
+                                end                            
+                            elseif(R.path(i, 3) < 0 && phi < 0)
+                                errorPhi = R.path(i, 3) - phi;
                             end
-                            errorPhi = angleReference - phi;
 %                             integralErrorX = integralErrorX + ((oldErrorX + errorX)/2)*t;
 %                             integralErrorY = integralErrorY + ((oldErrorY + errorY)/2)*t;
                             integralErrorPhi = integralErrorPhi + ((oldErrorPhi + errorPhi)/2)*t;
