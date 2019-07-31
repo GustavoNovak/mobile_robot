@@ -24,16 +24,20 @@ classdef TopographicMap
             end
 
             if (response && ~isempty(T.robot.toolZone))
-                for i = 1:length(T.robot.toolZone)
-                    point = [robotPosition(1) robotPosition(2)] + [cos(robotPosition(3) + T.robot.toolZone(i,1))*T.robot.toolZone(i,2) sin(robotPosition(3) + T.robot.toolZone(i,1))*T.robot.toolZone(i,2)];
-                    pixelPosition = T.robot.cameras.getRealPixelPosition([point(1) ; point(2) ; 0]);
-                    pixelPosition = [floor(pixelPosition(1)) floor(pixelPosition(2))];  
-                    if ((pixelPosition(1) > 1 && pixelPosition(2) > 1) && (pixelPosition(2) <= mapSize(1) && pixelPosition(1) <= mapSize(2)))
-                        if (T.realMap(pixelPosition(2), pixelPosition(1)) == 0)
-                            response = false;
-                            break;
-                        end
-                    end  
+                lengthToolZone = size(T.robot.toolZone);
+                lengthToolZone = lengthToolZone(1);
+                if(lengthToolZone > 0)
+                    for i = 1:lengthToolZone
+                        point = [robotPosition(1) robotPosition(2)] + [cos(robotPosition(3) + T.robot.toolZone(i,1))*T.robot.toolZone(i,2) sin(robotPosition(3) + T.robot.toolZone(i,1))*T.robot.toolZone(i,2)];
+                        pixelPosition = T.robot.cameras.getRealPixelPosition([point(1) ; point(2) ; 0]);
+                        pixelPosition = [floor(pixelPosition(1)) floor(pixelPosition(2))];  
+                        if ((pixelPosition(1) > 1 && pixelPosition(2) > 1) && (pixelPosition(2) <= mapSize(1) && pixelPosition(1) <= mapSize(2)))
+                            if (T.realMap(pixelPosition(2), pixelPosition(1)) == 0)
+                                response = false;
+                                break;
+                            end
+                        end  
+                    end
                 end
             end
         end

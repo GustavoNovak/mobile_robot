@@ -23,7 +23,8 @@ classdef PathPlanning
             count = 2;
             actualTree = 1;
             k = 1;
-            while k <= 500
+            while k <= 5000
+                k
                 sample = [randi([-width/2 width/2]) randi([-height/2 height/2]) (randi([-314 314])/100)];
 
                 [nearstNode, index] = services.PathPlanning.getNearestNode(sample, tree, actualTree);
@@ -260,7 +261,27 @@ classdef PathPlanning
         
         function response = verifyCollision(startPoint, endPoint, topographicMap)
             vector = endPoint - startPoint;
-            vectorMagnitude = norm(vector);
+            if(endPoint(3) >= 0 && startPoint(3) >= 0)
+                errorPhi = endPoint(3) - startPoint(3);
+            elseif(endPoint(3) < 0 && startPoint(3) >= 0)
+                positiveDistance = 2*pi - startPoint(3) + endPoint(3);
+                if(positiveDistance <= pi)
+                    errorPhi = positiveDistance;
+                else
+                    errorPhi = startPoint(3) - endPoint(3);
+                end
+            elseif(endPoint(3) >= 0 && startPoint(3) < 0)
+                positiveDistance = endPoint(3) - startPoint(3);
+                if(positiveDistance <= pi)
+                    errorPhi = positiveDistance;
+                else
+                    errorPhi = 2*pi + startPoint(3) - endPoint(3);
+                end                            
+            elseif(endPoint(3) < 0 && startPoint(3) < 0)
+                errorPhi = endPoint(3) - startPoint(3);
+            end
+            
+            vectorMagnitude = norm([vector(1) vector(2) errorPhi]);
             
             n = floor(vectorMagnitude / 1);
             if (n < 10) 
@@ -271,6 +292,11 @@ classdef PathPlanning
             t = 0;
             while t <= 1
                 point = startPoint + t*vector;
+                if(point(3) < -pi)
+                    point(3) = 2*pi + point(3);
+                elseif(point(3) > pi)
+                    point(3) = -2*pi + point(3);
+                end
                 
                 if (~topographicMap.isFree(point))
                     response = true;

@@ -22,31 +22,7 @@ classdef Index
         
         function testPID(position)
             system('start /min interface_cpp.exe');
-            toolZone = [
-                0.1538 195.860 ; 
-                0.1538 183.743 ; 
-                0.1149 203.147 ; 
-                0.1149 231.917 ; 
-                0.1149 261.725 ; 
-                0.0564 196.792 ; 
-                0.0564 223.346 ; 
-                0.0564 243.951 ; 
-                0.0564 260.414 ; 
-                0.0000 260.000 ; 
-                0.0000 243.562 ; 
-                0.0000 222.990 ;  
-                0.0000 196.479 ; 
-                -0.1538 195.860 ; 
-                -0.1538 183.743 ; 
-                -0.1149 203.147 ; 
-                -0.1149 231.917 ; 
-                -0.1149 261.725 ; 
-                -0.0564 196.792 ; 
-                -0.0564 223.346 ; 
-                -0.0564 243.951 ; 
-                -0.0564 260.414 ; 
-                ];
-            robot = classes.Robot(300, toolZone, [0 0], 60, 0.1);
+            robot = classes.Robot(300, [430 40 0], [430 0], 60, 0.1); 
             try
                 topographicMap = classes.TopographicMap(robot);
                 preview(robot.cameras.cameras(2));
@@ -101,9 +77,9 @@ classdef Index
                 -0.0564 243.951 ; 
                 -0.0564 260.414 ; 
                 ];
-            robot = classes.Robot(300, toolZone, [430 0], 60, 0.1);    
+            robot = classes.Robot(300, [430 40 0], [430 0], 60, 0.1);    
             try
-                measurement = classes.Measurement('mesh', [230 230], [-1000 1000 ; 1000 1000 ; 1000 -1000 ; -1000 -1000]);
+                measurement = classes.Measurement('mesh', [300 300], [-1000 1000 ; 1000 1000 ; 1000 -1000 ; -1000 -1000]);
                 topographicMap = classes.TopographicMap(robot);
                 imagesc([0 640], [0 480], topographicMap.map);
                 hold on;

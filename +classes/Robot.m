@@ -40,6 +40,79 @@ classdef Robot
             end 
         end
         
+        function mesh = generateToolZone(R, toolZone)
+            lengthToolZone = size(toolZone)
+            lengthToolZone = lengthToolZone(1);
+            count = 0;
+            mesh = [];
+            figure;
+            hold on;
+            if(lengthToolZone > 0)
+                for i=1:lengthToolZone
+                    heightMax = toolZone(i, 1);
+                    widthMax = toolZone(i, 2);
+                    angle = toolZone(i, 3); 
+                    directionVector = [sin(angle) -cos(angle)];
+                    height = ((R.diameter/2)^2 - (widthMax/2)^2)^0.5;
+                    while (height <= heightMax)
+                        t = -widthMax/2;
+                        while t <= (widthMax/2)
+                            P0 = height*[cos(angle) sin(angle)];
+                            newNode = P0 + t*directionVector;
+                            if(norm(newNode) > (R.diameter/2))
+                                [r, phi] = services.Math.getPolarCoordinates(newNode);
+                                count = count + 1;
+                                mesh(count, :) = [phi r];
+                            end  
+                            t = t + 20;
+                        end
+                        
+                        if(t > (widthMax/2))
+                            t = widthMax/2;
+                            P0 = height*[cos(angle) sin(angle)];
+                            newNode = P0 + t*directionVector;
+                            if(norm(newNode) > (R.diameter/2))
+                                [r, phi] = services.Math.getPolarCoordinates(newNode);
+                                count = count + 1;
+                                mesh(count, :) = [phi r];
+                            end                        
+                        end
+                        height = height + 30;
+                    end
+                    
+                    if(height > heightMax)
+                        height = heightMax;
+                        t = -widthMax/2;
+                        while t <= (widthMax/2)
+                            P0 = height*[cos(angle) sin(angle)];
+                            newNode = P0 + t*directionVector;
+                            if(norm(newNode) > (R.diameter/2))
+                                [r, phi] = services.Math.getPolarCoordinates(newNode);
+                                count = count + 1;
+                                mesh(count, :) = [phi r];
+                            end
+                            t = t + 20;
+                        end
+                        
+                        if(t > (widthMax/2))
+                            t = widthMax/2;
+                            P0 = height*[cos(angle) sin(angle)];
+                            newNode = P0 + t*directionVector;
+                            if(norm(newNode) > (R.diameter/2))
+                                [r, phi] = services.Math.getPolarCoordinates(newNode);
+                                count = count + 1;
+                                mesh(count, :) = [phi r];
+                            end                       
+                        end                       
+                    end
+                end
+            end
+%             mesh
+%             for i=1:length(mesh)
+%                 plot(mesh(i, 1), mesh(i, 2), 'o');
+%             end
+        end
+        
         function delete(R)
             R.cameras.delete();
         end
