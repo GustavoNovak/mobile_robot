@@ -147,7 +147,26 @@ classdef PathPlanning
             for i = 1: lastIndexTree
                 if (tree(i, 6) == actualTree)
                     Spoint = [tree(i,1) tree(i,2) tree(i,3)];
-                    distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2)^0.5; 
+                    if(tree(i, 3) >= 0 && newNode(3) >= 0)
+                        angleError = tree(i, 3) - newNode(3);
+                    elseif(tree(i, 3) < 0 && newNode(3) >= 0)
+                        positiveDistance = 2*pi - newNode(3) + tree(i, 3);
+                        if(positiveDistance <= pi)
+                            angleError = positiveDistance;
+                        else
+                            angleError = newNode(3) - tree(i, 3);
+                        end
+                    elseif(tree(i, 3) >= 0 && newNode(3) < 0)
+                        positiveDistance = tree(i, 3) - newNode(3);
+                        if(positiveDistance <= pi)
+                            angleError = positiveDistance;
+                        else
+                            angleError = 2*pi + newNode(3) - tree(i, 3);
+                        end                            
+                    elseif(tree(i, 3) < 0 && newNode(3) < 0)
+                        angleError = tree(i, 3) - newNode(3);
+                    end
+                    distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2 + angleError^2)^0.5; 
                     if (distance < beta)    
                         distance = distance + tree(i, 5);
                         if (minDistance == 1000000)
@@ -175,7 +194,7 @@ classdef PathPlanning
             for i = 1: lastIndexTree
                 if (tree(i, 6) == actualTree)
                     if (i ~= newNodeIndex)
-                        Spoint = [tree(i,1) tree(i,2)];
+                        Spoint = [tree(i,1) tree(i,2) tree(i,3)];
                         distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2)^0.5; 
                         if (distance < beta)    
                             distance = distance + tree(newNodeIndex, 5);

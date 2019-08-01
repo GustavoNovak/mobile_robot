@@ -41,7 +41,7 @@ classdef Robot
         end
         
         function mesh = generateToolZone(R, toolZone)
-            lengthToolZone = size(toolZone)
+            lengthToolZone = size(toolZone);
             lengthToolZone = lengthToolZone(1);
             count = 0;
             mesh = [];
