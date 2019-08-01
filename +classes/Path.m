@@ -23,7 +23,7 @@ classdef Path
             while i <= length(measurementPoints)
                 theta = -pi;
                 while theta <= pi  
-                    robotPosition = services.Math.getRobotPosition(measurementPoints(i, :), theta, P.topographicMap.robot)
+                    robotPosition = services.Math.getRobotPosition(measurementPoints(i, :), theta, P.topographicMap.robot);
           
                     if (P.topographicMap.isFree(robotPosition))
                         count = count + 1;
@@ -60,7 +60,6 @@ classdef Path
             lengthPoints = lengthPoints(1);
             if (lengthPoints > 1)
                 for j = 1: (lengthPoints-1)
-                    j
                     newPath = services.PathPlanning.generatePath(points(j, :), points(j+1, :), P.topographicMap, P.measurement);
                     lengthNewPath = size(newPath);
                     lengthNewPath = lengthNewPath(1);                    

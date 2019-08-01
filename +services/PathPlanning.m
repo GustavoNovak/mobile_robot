@@ -5,8 +5,8 @@ classdef PathPlanning
     methods (Static)      
         function optimizedPath = generatePath(startPoint, endPoint, topographicMap, measurement)
             % Setting up constants
-            step = 50;
-            beta = 100;
+            step = 20;
+            beta = 40;
             [width, height] = measurement.getChamberSize();
             solutionFound = false;
             if (~topographicMap.isFree(endPoint))
@@ -15,16 +15,16 @@ classdef PathPlanning
             % Generating RRT*-double-optimized path
 %             figure;
 %             hold on;
-%             imagesc([-1500 1500], [-1500 1500], topographicMap.map);
+%             imagesc([0 640], [0 480], topographicMap.map);
             
             tree(1, :) = [startPoint(1) startPoint(2) startPoint(3) 0 0 1];
             tree(2, :) = [endPoint(1) endPoint(2) endPoint(3) 0 0 0];
-            
+%             plot(startPoint(1), startPoint(2), 'o');
+%             plot(endPoint(1), endPoint(2), 'o');
             count = 2;
             actualTree = 1;
             k = 1;
-            while k <= 5000
-                k
+            while k <= 50000
                 sample = [randi([-width/2 width/2]) randi([-height/2 height/2]) (randi([-314 314])/100)];
 
                 [nearstNode, index] = services.PathPlanning.getNearestNode(sample, tree, actualTree);
@@ -154,7 +154,7 @@ classdef PathPlanning
                         if(positiveDistance <= pi)
                             angleError = positiveDistance;
                         else
-                            angleError = newNode(3) - tree(i, 3);
+                            angleError = tree(i, 3) - newNode(3);
                         end
                     elseif(tree(i, 3) >= 0 && newNode(3) < 0)
                         positiveDistance = tree(i, 3) - newNode(3);
@@ -214,7 +214,7 @@ classdef PathPlanning
             vector = sample - nearstNode;
             vector = vector / norm(vector);
             
-            newNode = nearstNode + step*[vector(1) vector(2) 0] + (step/10)*[0 0 vector(3)];
+            newNode = nearstNode + step*[vector(1) vector(2) 0] + 0.1*[0 0 vector(3)];
         end
         
         function [nearest_node, index] = getNearestNode(newNode, tree, actualTree) 
@@ -234,7 +234,7 @@ classdef PathPlanning
                             if(positiveDistance <= pi)
                                 angleError = positiveDistance;
                             else
-                                angleError = newNode(3) - tree(i, 3);
+                                angleError = tree(i, 3) - newNode(3);
                             end
                         elseif(tree(i, 3) >= 0 && newNode(3) < 0)
                             positiveDistance = tree(i, 3) - newNode(3);
@@ -255,7 +255,7 @@ classdef PathPlanning
                             if(positiveDistance <= pi)
                                 angleError = positiveDistance;
                             else
-                                angleError = newNode(3) - tree(i, 3);
+                                angleError = tree(i, 3) - newNode(3);
                             end
                         elseif(tree(i, 3) >= 0 && newNode(3) < 0)
                             positiveDistance = tree(i, 3) - newNode(3);
@@ -287,7 +287,7 @@ classdef PathPlanning
                 if(positiveDistance <= pi)
                     errorPhi = positiveDistance;
                 else
-                    errorPhi = startPoint(3) - endPoint(3);
+                    errorPhi = endPoint(3) - startPoint(3);
                 end
             elseif(endPoint(3) >= 0 && startPoint(3) < 0)
                 positiveDistance = endPoint(3) - startPoint(3);

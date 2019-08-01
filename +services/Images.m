@@ -8,11 +8,11 @@ classdef Images
             BW1 = edge(img,'sobel');
             figure;
             imshow(BW1);
-            se90 = strel('line',5,90);
-            se0 = strel('line',5,0);
+            se90 = strel('line',15,90);
+            se0 = strel('line',15,0);
             BWsdil = imdilate(BW1,[se90 se0]);
             BWdfill = imfill(BWsdil,'holes');
-            img = bwareafilt(BWdfill, 2);
+            img = bwareafilt(BWdfill, 3);
             imwrite(imcomplement(img),'storage/real_topographic_map.png')
             imageSize = size(img);
             

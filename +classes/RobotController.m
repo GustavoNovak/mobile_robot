@@ -56,7 +56,7 @@ classdef RobotController
                                 if(positiveDistance <= pi)
                                     errorPhi = positiveDistance;
                                 else
-                                    errorPhi = phi - R.path(i, 3);
+                                    errorPhi = R.path(i, 3) - phi;
                                 end
                             elseif(R.path(i, 3) >= 0 && phi < 0)
                                 positiveDistance = R.path(i, 3) - phi;
@@ -149,7 +149,7 @@ classdef RobotController
                                 if(positiveDistance <= pi)
                                     errorPhi = positiveDistance;
                                 else
-                                    errorPhi = phi - R.path(i, 3);
+                                    errorPhi = R.path(i, 3) - phi;
                                 end
                             elseif(R.path(i, 3) >= 0 && phi < 0)
                                 positiveDistance = R.path(i, 3) - phi;

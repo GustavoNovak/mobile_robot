@@ -27,24 +27,24 @@ classdef Measurement
         end
         
         function points = getMeasurementPoints(M)
-            [width, height] = M.getChamberSize();
+            [width, height] = M.getChamberSize()
             
-            width = width - 10;
-            height = height - 10;
+            width = width - 500;
+            height = height - 500;
             count = 0;
             switch M.type
                 case 'mesh'
                     x = M.data(1) / 2;
-                    while x < (width/2 - M.data(1))
+                    while x < width/2
                         y = M.data(2) / 2;
-                        while y < (height/2 - M.data(2))
+                        while y < height/2
                             count = count + 1;
                             points(count, :) = [x y];
                             y = y + M.data(2);  
                         end
                         
                         y = - M.data(2) / 2;
-                        while -y < (height/2 - M.data(2))
+                        while -y < height/2
                             count = count + 1;
                             points(count, :) = [x y];
                             y = y - M.data(2);  
@@ -54,16 +54,16 @@ classdef Measurement
                     end
                     
                     x = - M.data(1) / 2;
-                    while -x <  (width/2 - M.data(1))
+                    while -x <  width/2
                         y = M.data(2) / 2;
-                        while y < (height/2 - M.data(2))
+                        while y < height/2
                             count = count + 1;
                             points(count, :) = [x y];
                             y = y + M.data(2);  
                         end
                         
                         y = - M.data(2) / 2;
-                        while -y < (height/2 - M.data(2))
+                        while -y < height/2
                             count = count + 1;
                             points(count, :) = [x y];
                             y = y - M.data(2);  

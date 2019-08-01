@@ -56,9 +56,9 @@ classdef Cameras
                 calibrationPoints = [-1000 -1350 0 ; 0 -1350 0 ; 1000 -1350 0 ; 0 1350 0 ; -1000 1350 0 ; 1000 1350 0 ; -1000 0 0 ; 0 0 0 ; 1000 0 0 ];
 %                 calibrationPoints = [-1000 -1350 0 ; 0 -1350 0 ; 1000 -1350 0 ; 0 1350 0 ; -1000 1350 0 ; 1000 1350 0 ; -900 -1250 0 ; 0 -1250 0 ; 900 -1250 0 ; 0 1250 0 ; -900 1250 0 ; 900 1250 0 ; -800 -1150 0 ; 0 -1150 0 ; 800 -1150 0 ; 0 1150 0 ; -800 1150 0 ; 800 1150 0 ; -700 -1050 0 ; 0 -1050 0 ; 700 -1050 0 ; 0 1050 0 ; -700 1050 0 ; 700 1050 0 ; -600 -950 0 ; 0 -950 0 ; 600 -950 0 ; 0 950 0 ; -600 950 0 ; 600 950 0 ; -500 -850 0 ; 0 -850 0 ; 500 -850 0 ; 0 850 0 ; -500 850 0 ; 500 850 0 ; -400 -750 0 ; 0 -750 0 ; 400 -750 0 ; 0 750 0 ; -400 750 0 ; 400 750 0 ; -300 -650 0 ; 0 -650 0 ; 300 -650 0 ; 0 650 0 ; -300 650 0 ; 300 650 0 ; -200 -550 0 ; 0 -550 0 ; 200 -550 0 ; 0 550 0 ; -200 550 0 ; 200 550 0 ; -100 -450 0 ; 0 -450 0 ; 100 -450 0 ; 0 450 0 ; -100 450 0 ; 100 450 0 ; 0 -350 0 ; 0 -350 0 ; 0 -350 0 ; 0 350 0 ; 0 350 0 ; 0 350 0 ; 100 -250 0 ; 0 -250 0 ; -100 -250 0 ; 0 250 0 ; 100 250 0 ; -100 250 0];
                 % Inform the views here
-                urlViews = {
-                   'storage/calibration_images/multiple_images/image_calibration_1.JPG'   
-                };
+%                 urlViews = {
+%                    'storage/calibration_images/multiple_images/image_calibration_1.JPG'   
+%                 };
 %             'storage/calibration_images/multiple_images/image_calibration_2.JPG' 
 %             'storage/calibration_images/multiple_images/image_calibration_3.JPG' 
         
@@ -67,11 +67,11 @@ classdef Cameras
             numberPoints = size(calibrationPoints);
             numberPoints = numberPoints(1);
             
-            viewsLength = length(urlViews);
-           
+%             viewsLength = length(urlViews);
+           viewsLength = 1;
 %             pixelValuesCalibrationPoints = services.Simulator.calculatePointsInImage([-1000 -1350 0 ; 0 -1350 0 ; 1000 -1350 0 ; 0 1350 0 ; -1000 1350 0 ; 1000 1350 0 ; -900 -1250 0 ; 0 -1250 0 ; 900 -1250 0 ; 0 1250 0 ; -900 1250 0 ; 900 1250 0 ; -800 -1150 0 ; 0 -1150 0 ; 800 -1150 0 ; 0 1150 0 ; -800 1150 0 ; 800 1150 0 ; -700 -1050 0 ; 0 -1050 0 ; 700 -1050 0 ; 0 1050 0 ; -700 1050 0 ; 700 1050 0 ; -600 -950 0 ; 0 -950 0 ; 600 -950 0 ; 0 950 0 ; -600 950 0 ; 600 950 0 ; -500 -850 0 ; 0 -850 0 ; 500 -850 0 ; 0 850 0 ; -500 850 0 ; 500 850 0 ; -400 -750 0 ; 0 -750 0 ; 400 -750 0 ; 0 750 0 ; -400 750 0 ; 400 750 0 ; -300 -650 0 ; 0 -650 0 ; 300 -650 0 ; 0 650 0 ; -300 650 0 ; 300 650 0 ; -200 -550 0 ; 0 -550 0 ; 200 -550 0 ; 0 550 0 ; -200 550 0 ; 200 550 0 ; -100 -450 0 ; 0 -450 0 ; 100 -450 0 ; 0 450 0 ; -100 450 0 ; 100 450 0 ; 0 -350 0 ; 0 -350 0 ; 0 -350 0 ; 0 350 0 ; 0 350 0 ; 0 350 0 ; 100 -250 0 ; 0 -250 0 ; -100 -250 0 ; 0 250 0 ; 100 250 0 ; -100 250 0], 3.7, [80.5 60], [320 240]);
             
-             pixelValuesCalibrationPoints = [1 29 465 ; 1 292 463 ; 1 550 455 ; 1 287 6; 1 132 6 ; 1 443 3 ; 1 93 179 ; 1 288 179 ; 1 482 173];
+             pixelValuesCalibrationPoints = [1 30 474 ; 1 292 472 ; 1 553 464 ; 1 290 14; 1 134 16 ; 1 444 11 ; 1 94 188 ; 1 290 185 ; 1 484 180];
             
 %             pixelValuesCalibrationPoints = [
 %                 1 208 133 ; 1 127 88 ; 1 98 193 ; 1 188 235 ; 1 199 185 ; 1 169 111 ; 1 113 139 ; 1 145 215 ; 1 158 160 ; 1 183 39 ; 1 268 91 ; 
@@ -82,7 +82,7 @@ classdef Cameras
             countViews = 0;
             for i = 1:viewsLength
                 countViews = countViews + 1;
-                views{i} = imread(urlViews{i});
+%                 views{i} = imread(urlViews{i});
 %                 imshow(views{i});
 %                 impixelinfo;
                 if ~exist('u0','var') 
@@ -96,7 +96,8 @@ classdef Cameras
 
 %                     rMax = k1*thetaMax + k2*(thetaMax^3) + k3*(thetaMax^5) + k4*(thetaMax^7) + k5*(thetaMax^9)
                     rMax = focusLength*tan(thetaMax);
-                    [mu, mv, u0, v0] = C.getPixelsMappingModel(rMax, views{i});
+%                     [mu, mv, u0, v0] = C.getPixelsMappingModel(rMax, views{i});
+                    [mu, mv, u0, v0] = C.getPixelsMappingModel(rMax, []);
 %                     mu = 82;
 %                     mv = 59;
 %                     u0=320;
@@ -303,9 +304,9 @@ classdef Cameras
         end
         
         function [mu, mv, u0, v0] = getPixelsMappingModel(C, rMax, view)
-            sizeView = size(view);
-            a = sizeView(2);
-            b = sizeView(1);
+%             sizeView = size(view);
+%             a = sizeView(2);
+%             b = sizeView(1);
             a = 640;
             b = 480;
             
@@ -327,13 +328,13 @@ classdef Cameras
         
         function realPosition = getRealPosition(C, m, z)
             lambda = 1;
-            theta = -0.0185;
-            psi = 2.7139;
-            phi = -0.0250;
-            t = [-154.6 ; -339.5 ; 2251.0];
-            focusLength = 4.0839;
-            mu = 107.4551;
-            mv = 103.0531;
+            theta = -0.0100;
+            psi = 2.7069;
+            phi = -0.0269;
+            t = [-148.8 ; -300.0 ; 2248.2];
+            focusLength = 4.0696;
+            mu = 107.7478;
+            mv = 102.7468;
             u0 = 320.0000;
             v0 = 240.0000;
             

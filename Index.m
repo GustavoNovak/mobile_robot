@@ -78,8 +78,8 @@ classdef Index
                 -0.0564 260.414 ; 
                 ];
             robot = classes.Robot(300, [430 40 0], [430 0], 60, 0.1);    
-%             try
-                measurement = classes.Measurement('mesh', [300 300], [-1000 1000 ; 1000 1000 ; 1000 -1000 ; -1000 -1000]);
+            try
+                measurement = classes.Measurement('mesh', [300 250], [-1000 1000 ; 1000 1000 ; 1000 -1000 ; -1000 -1000]);
                 topographicMap = classes.TopographicMap(robot);
                 imagesc([0 640], [0 480], topographicMap.map);
                 hold on;
@@ -93,11 +93,11 @@ classdef Index
                 robot.cameras.delete();
                 disp('Measurements finished!');
                 system('TASKKILL -f -im "interface_cpp.exe"');
-%             catch e
-%                 robot.cameras.delete();
-%                 system('TASKKILL -f -im "interface_cpp.exe"');
-%                 fprintf(1,'There was an error! The message was:\n%s',e.message);
-%             end
+            catch e
+                robot.cameras.delete();
+                system('TASKKILL -f -im "interface_cpp.exe"');
+                fprintf(1,'There was an error! The message was:\n%s',e.message);
+            end
 %             for k = 1:(length(points) - 1)
 %                 disp(k);
 %                 distance = (points(k+1,:) - points(k,:))/1000;
