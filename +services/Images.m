@@ -13,46 +13,64 @@ classdef Images
             BWsdil = imdilate(BW1,[se90 se0]);
             BWdfill = imfill(BWsdil,'holes');
             img = bwareafilt(BWdfill, 3);
-            imwrite(imcomplement(img),'storage/real_topographic_map.png')
             imageSize = size(img);
-            
-            count = 0;
-            points = [];
             for i=1:imageSize(1)
                 for j=1:imageSize(2)
-                    if (img(i,j) == 1)
-                        circleCenter = cameras.getRealPosition([j i], 0);
-                        for theta = 0:(pi/15):2*pi
-                            circlePosition = circleCenter + 185*[cos(theta) sin(theta) 0];
-                            circlePosition = [circlePosition(1) ; circlePosition(2) ; circlePosition(3)];
-                            realPixelPosition = cameras.getRealPixelPosition(circlePosition);
-                            realPixelPosition(1) = floor(realPixelPosition(1));
-                            realPixelPosition(2) = floor(realPixelPosition(2));
-                            if((realPixelPosition(1) >= 1 && realPixelPosition(1) <= imageSize(2)) && (realPixelPosition(2) >= 1 && realPixelPosition(2) <= imageSize(1)))
-                                count = count + 1;
-                                points(count, :) = [realPixelPosition(2) realPixelPosition(1)];
-                            end
+                    realPosition = cameras.getRealPosition([j i], 0);
+                    if((realPosition(1) < -1390 || realPosition(1) > 1390) || (realPosition(2) < -1450 || realPosition(2) > 1450))
+                        img(i,j) = 1;
+                    end
+                end            
+            end
+            imwrite(imcomplement(img),'storage/real_topographic_map.png')
+            
+            imshow(img);
+            imgToVerify = img;
+            
+            for i=1:imageSize(1)
+                pourcentage = (i/imageSize(1))*100
+                for j=1:imageSize(2)
+                    if (imgToVerify(i,j) == 1)
+                        if(BWsdil(i,j) == 1)
+                            circleCenter = cameras.getRealPosition([j i], 0);
+                            for theta = 0:(pi/10):2*pi
+                                circlePosition = circleCenter + 185*[cos(theta) sin(theta) 0];
+                                circlePosition = [circlePosition(1) ; circlePosition(2) ; circlePosition(3)];
+                                realPixelPosition = cameras.getRealPixelPosition(circlePosition);
+                                realPixelPosition(1) = floor(realPixelPosition(1));
+                                realPixelPosition(2) = floor(realPixelPosition(2));
+                                if((realPixelPosition(1) >= 1 && realPixelPosition(1) <= imageSize(2)) && (realPixelPosition(2) >= 1 && realPixelPosition(2) <= imageSize(1)))
+                                    img(realPixelPosition(2), realPixelPosition(1)) = 1;
+                                end
+                            end                            
                         end
                     end
                 end     
             end
             
-            if(count > 0)
-                for i = 1:length(points)
-                    img(points(i,1), points(i,2)) = 1; 
-                end
-            end
-            figure;
             img = imfill(img,'holes');
+            figure;
             seD = strel('diamond',1);
             img = imerode(img,seD);
             img = imerode(img,seD);
             img = imcomplement(img);
+            
+            tolerance = 175 + 150;
+
+            for i=1:imageSize(1)
+                for j=1:imageSize(2)
+                    realPosition = cameras.getRealPosition([j i], 0);
+                    if((realPosition(1) < -(1390 - tolerance) || realPosition(1) > (1390 - tolerance)) || (realPosition(2) < -(1450 - tolerance) || realPosition(2) > (1450 - tolerance)))
+                        img(i,j) = 0;
+                    end
+                end            
+            end
+            
             imwrite(img,'storage/topographic_map.png')
             imshow(img);
         end
         
-        function [xPixel, yPixel] = getCirclePositon(image, color)
+        function [xPixel, yPixel] = getCirclePositon(image, color, pixelPosition)
             if (strcmp(color, 'blue')) 
                 xPixel = 0;
                 yPixel = 0;
@@ -69,43 +87,90 @@ classdef Images
             imageSize = size(image);
             points = [];
             count = 0;
-            for i=1:imageSize(1)
-                for j=1:imageSize(2)
-                    if (strcmp(color, 'blue'))
-                        indicator1 = imageValues(i,j,3)/imageValues(i,j,1);
-                        indicator2 = imageValues(i,j,3)/imageValues(i,j,2);
-                        indicator3 = imageValues(i,j,3);
-                        if (indicator1 > 2 && indicator2 > 2 && indicator3 > (100/255)) 
-                            count = count + 1;
-                            points(count, :) = [i j];
-%                             for k1 = i:(i+15)
-%                                 for k2 = j:(j+15)
-%                                     image(k1,k2,1) = 255;
-%                                     image(k1,k2,2) = 255;
-%                                     image(k1,k2,3) = 255; 
-%                                 end
-%                             end
-%                             image(i,j,1) = 255;
-%                             image(i,j,2) = 255;
-%                             image(i,j,3) = 255; 
+            
+            for i=(pixelPosition(2)-100):(pixelPosition(2)+100)
+                for j=(pixelPosition(1)-100):(pixelPosition(1)+100)
+                    if((i >= 1 && i <= imageSize(1)) && (j >= 1 && j <= imageSize(2)))
+                        if (strcmp(color, 'blue'))
+                            indicator1 = imageValues(i,j,3)/imageValues(i,j,1);
+                            indicator2 = imageValues(i,j,3)/imageValues(i,j,2);
+                            indicator3 = imageValues(i,j,3);
+                            if (indicator1 > 1.5 && indicator2 > 1.5 && indicator3 > (80/255)) 
+                                count = count + 1;
+                                points(count, :) = [i j];
+    %                             for k1 = i:(i+15)
+    %                                 for k2 = j:(j+15)
+    %                                     image(k1,k2,1) = 255;
+    %                                     image(k1,k2,2) = 255;
+    %                                     image(k1,k2,3) = 255; 
+    %                                 end
+    %                             end
+    %                             image(i,j,1) = 255;
+    %                             image(i,j,2) = 255;
+    %                             image(i,j,3) = 255; 
+                            end
+                        elseif (strcmp(color, 'red'))
+                            indicator1 = imageValues(i,j,1)/imageValues(i,j,2);
+                            indicator2 = imageValues(i,j,1)/imageValues(i,j,3);
+                            if (imageValues(i,j,1) > (120/255) && indicator1 > 2 && indicator2 > 2)
+                                count = count + 1;
+                                points(count, :) = [i j];
+    %                             for k1 = i:(i+15)
+    %                                 for k2 = j:(j+15)
+    %                                     image(k1,k2,1) = 255;
+    %                                     image(k1,k2,2) = 255;
+    %                                     image(k1,k2,3) = 255; 
+    %                                 end
+    %                             end
+    %                             image(i,j,1) = 255;
+    %                             image(i,j,2) = 255;
+    %                             image(i,j,3) = 255; 
+                            end   
+                        end 
+                    end
+                end
+            end
+            
+            if(count == 0)
+                disp('não achou de primeira');
+                for i=1:imageSize(1)
+                    for j=1:imageSize(2)
+                        if (strcmp(color, 'blue'))
+                            indicator1 = imageValues(i,j,3)/imageValues(i,j,1);
+                            indicator2 = imageValues(i,j,3)/imageValues(i,j,2);
+                            indicator3 = imageValues(i,j,3);
+                            if (indicator1 > 1.5 && indicator2 > 1.5 && indicator3 > (80/255)) 
+                                count = count + 1;
+                                points(count, :) = [i j];
+    %                             for k1 = i:(i+15)
+    %                                 for k2 = j:(j+15)
+    %                                     image(k1,k2,1) = 255;
+    %                                     image(k1,k2,2) = 255;
+    %                                     image(k1,k2,3) = 255; 
+    %                                 end
+    %                             end
+    %                             image(i,j,1) = 255;
+    %                             image(i,j,2) = 255;
+    %                             image(i,j,3) = 255; 
+                            end
+                        elseif (strcmp(color, 'red'))
+                            indicator1 = imageValues(i,j,1)/imageValues(i,j,2);
+                            indicator2 = imageValues(i,j,1)/imageValues(i,j,3);
+                            if (imageValues(i,j,1) > (120/255) && indicator1 > 2 && indicator2 > 2)
+                                count = count + 1;
+                                points(count, :) = [i j];
+    %                             for k1 = i:(i+15)
+    %                                 for k2 = j:(j+15)
+    %                                     image(k1,k2,1) = 255;
+    %                                     image(k1,k2,2) = 255;
+    %                                     image(k1,k2,3) = 255; 
+    %                                 end
+    %                             end
+    %                             image(i,j,1) = 255;
+    %                             image(i,j,2) = 255;
+    %                             image(i,j,3) = 255; 
+                            end   
                         end
-                    elseif (strcmp(color, 'red'))
-                        indicator1 = imageValues(i,j,1)/imageValues(i,j,2);
-                        indicator2 = imageValues(i,j,1)/imageValues(i,j,3);
-                        if (imageValues(i,j,1) > (180/255) && indicator1 > 2 && indicator2 > 2)
-                            count = count + 1;
-                            points(count, :) = [i j];
-%                             for k1 = i:(i+15)
-%                                 for k2 = j:(j+15)
-%                                     image(k1,k2,1) = 255;
-%                                     image(k1,k2,2) = 255;
-%                                     image(k1,k2,3) = 255; 
-%                                 end
-%                             end
-%                             image(i,j,1) = 255;
-%                             image(i,j,2) = 255;
-%                             image(i,j,3) = 255; 
-                        end   
                     end
                 end
             end
@@ -136,6 +201,7 @@ classdef Images
 %             
 %             figure;
 %             imshow(image);
+%             impixelinfo
         end
         
         function pixelPoints = calculatePointsInImage(calibrationPoints, focusLength, imageDensity, pixelCenter)

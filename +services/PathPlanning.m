@@ -5,8 +5,8 @@ classdef PathPlanning
     methods (Static)      
         function optimizedPath = generatePath(startPoint, endPoint, topographicMap, measurement)
             % Setting up constants
-            step = 20;
-            beta = 40;
+            step = 50;
+            beta = 100;
             [width, height] = measurement.getChamberSize();
             solutionFound = false;
             if (~topographicMap.isFree(endPoint))

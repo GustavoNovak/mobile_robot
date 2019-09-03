@@ -53,33 +53,9 @@ classdef Index
             clear all;
             close all;
             system('start /min interface_cpp.exe');
-            toolZone = [
-                0.1538 195.860 ; 
-                0.1538 183.743 ; 
-                0.1149 203.147 ; 
-                0.1149 231.917 ; 
-                0.1149 261.725 ; 
-                0.0564 196.792 ; 
-                0.0564 223.346 ; 
-                0.0564 243.951 ; 
-                0.0564 260.414 ; 
-                0.0000 260.000 ; 
-                0.0000 243.562 ; 
-                0.0000 222.990 ;  
-                0.0000 196.479 ; 
-                -0.1538 195.860 ; 
-                -0.1538 183.743 ; 
-                -0.1149 203.147 ; 
-                -0.1149 231.917 ; 
-                -0.1149 261.725 ; 
-                -0.0564 196.792 ; 
-                -0.0564 223.346 ; 
-                -0.0564 243.951 ; 
-                -0.0564 260.414 ; 
-                ];
             robot = classes.Robot(300, [430 40 0], [430 0], 60, 0.1);    
             try
-                measurement = classes.Measurement('mesh', [300 250], [-1000 1000 ; 1000 1000 ; 1000 -1000 ; -1000 -1000]);
+                measurement = classes.Measurement('mesh', [800 900], [-1200 1400 ; 1200 1400 ; 1200 -1400 ; -1200 -1400]);
                 topographicMap = classes.TopographicMap(robot);
                 imagesc([0 640], [0 480], topographicMap.map);
                 hold on;
@@ -98,17 +74,6 @@ classdef Index
                 system('TASKKILL -f -im "interface_cpp.exe"');
                 fprintf(1,'There was an error! The message was:\n%s',e.message);
             end
-%             for k = 1:(length(points) - 1)
-%                 disp(k);
-%                 distance = (points(k+1,:) - points(k,:))/1000;
-%                 normDistance = norm(distance);
-%                 velocity = 0.1*(distance/normDistance);
-%                 while(normDistance > 0)
-%                     robot.setVelocity([velocity(1) velocity(2) 0]);
-%                     normDistance = normDistance - 0.02;
-%                     pause(0.2);
-%                 end
-%             end
         end
         
         function generatePath()

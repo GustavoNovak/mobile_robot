@@ -1,6 +1,7 @@
 classdef Cameras
     properties
         cameras
+        parameters
     end
     
     methods
@@ -11,26 +12,32 @@ classdef Cameras
             src = getselectedsource(cameraObj(2));
             src.FocusMode = 'manual';
             triggerconfig(cameraObj(2), 'manual');
-            start(cameraObj(1));
-            start(cameraObj(2));
             C.cameras = cameraObj;
+            start(C.cameras(1));
+            start(C.cameras(2));
+            C.parameters = services.Storage.getCameraParameters();
         end
         
         function delete(C)
+            stop(C.cameras(1));
+            stop(C.cameras(2));
             delete(C.cameras(1));
             delete(C.cameras(2));
             disp('Cameras destroyed successfully');
         end
         
-        function [x, y, phi] = getRobotPosition(C)
+        function [x, y, phi] = getRobotPosition(C, pixelPosition)
+            pixelPosition(1) = floor(pixelPosition(1));
+            pixelPosition(2) = floor(pixelPosition(2));
             for k1 = 1:1
+                tic
                 img = getsnapshot(C.cameras(2));
 %                 figure;
 %                 imshow(img);
 %                 impixelinfo;
 %                 hold on;
-                [xRed, yRed] = services.Images.getCirclePositon(img, 'red');
-                [xBlue, yBlue] = services.Images.getCirclePositon(img, 'blue');
+                [xRed, yRed] = services.Images.getCirclePositon(img, 'red', pixelPosition);
+                [xBlue, yBlue] = services.Images.getCirclePositon(img, 'blue', pixelPosition);
                 
                 realPositionRed = C.getRealPosition([xRed yRed], 220);
                 realPositionBlue = C.getRealPosition([xBlue yBlue], 220);
@@ -47,14 +54,15 @@ classdef Cameras
                     y = -999999;
                     phi = -999999;
                 end
+                t = toc
             end
         end
         
         function parameters = calibrate(C, focusLength, thetaMax, calibrationPoints)
             % Inputs
                 % Inform the calibration points here
-                calibrationPoints = [-1000 -1350 0 ; 0 -1350 0 ; 1000 -1350 0 ; 0 1350 0 ; -1000 1350 0 ; 1000 1350 0 ; -1000 0 0 ; 0 0 0 ; 1000 0 0 ];
-%                 calibrationPoints = [-1000 -1350 0 ; 0 -1350 0 ; 1000 -1350 0 ; 0 1350 0 ; -1000 1350 0 ; 1000 1350 0 ; -900 -1250 0 ; 0 -1250 0 ; 900 -1250 0 ; 0 1250 0 ; -900 1250 0 ; 900 1250 0 ; -800 -1150 0 ; 0 -1150 0 ; 800 -1150 0 ; 0 1150 0 ; -800 1150 0 ; 800 1150 0 ; -700 -1050 0 ; 0 -1050 0 ; 700 -1050 0 ; 0 1050 0 ; -700 1050 0 ; 700 1050 0 ; -600 -950 0 ; 0 -950 0 ; 600 -950 0 ; 0 950 0 ; -600 950 0 ; 600 950 0 ; -500 -850 0 ; 0 -850 0 ; 500 -850 0 ; 0 850 0 ; -500 850 0 ; 500 850 0 ; -400 -750 0 ; 0 -750 0 ; 400 -750 0 ; 0 750 0 ; -400 750 0 ; 400 750 0 ; -300 -650 0 ; 0 -650 0 ; 300 -650 0 ; 0 650 0 ; -300 650 0 ; 300 650 0 ; -200 -550 0 ; 0 -550 0 ; 200 -550 0 ; 0 550 0 ; -200 550 0 ; 200 550 0 ; -100 -450 0 ; 0 -450 0 ; 100 -450 0 ; 0 450 0 ; -100 450 0 ; 100 450 0 ; 0 -350 0 ; 0 -350 0 ; 0 -350 0 ; 0 350 0 ; 0 350 0 ; 0 350 0 ; 100 -250 0 ; 0 -250 0 ; -100 -250 0 ; 0 250 0 ; 100 250 0 ; -100 250 0];
+            calibrationPoints = [0 -1450 0 ; 0 1450 0 ; -1390 1450 0 ; 1390 1450 0 ; -1390 0 0 ; 0 0 0 ; 1390 0 0 ];
+%                  calibrationPoints = [-1000 -1350 0 ; 0 -1350 0 ; 1000 -1350 0 ; 0 1350 0 ; -1000 1350 0 ; 1000 1350 0 ; -900 -1250 200 ; 0 -1250 200 ; 900 -1250 200 ; 0 1250 200 ; -900 1250 100 ; 900 1250 100 ; -800 -1150 100 ; 0 -1150 0 ; 800 -1150 0 ; 0 1150 0 ; -800 1150 0 ; 800 1150 0 ; -700 -1050 0 ; 0 -1050 0 ; 700 -1050 0 ; 0 1050 0 ; -700 1050 0 ; 700 1050 0 ; -600 -950 0 ; 0 -950 0 ; 600 -950 0 ; 0 950 0 ; -600 950 0 ; 600 950 0 ; -500 -850 0 ; 0 -850 0 ; 500 -850 0 ; 0 850 0 ; -500 850 0 ; 500 850 0 ; -400 -750 0 ; 0 -750 0 ; 400 -750 0 ; 0 750 0 ; -400 750 0 ; 400 750 0 ; -300 -650 0 ; 0 -650 0 ; 300 -650 0 ; 0 650 0 ; -300 650 0 ; 300 650 0 ; -200 -550 0 ; 0 -550 0 ; 200 -550 0 ; 0 550 0 ; -200 550 0 ; 200 550 0 ; -100 -450 0 ; 0 -450 0 ; 100 -450 0 ; 0 450 0 ; -100 450 0 ; 100 450 0 ; 0 -350 0 ; 0 -350 0 ; 0 -350 0 ; 0 350 0 ; 0 350 0 ; 0 350 0 ; 100 -250 0 ; 0 -250 0 ; -100 -250 0 ; 0 250 0 ; 100 250 0 ; -100 250 0];
                 % Inform the views here
 %                 urlViews = {
 %                    'storage/calibration_images/multiple_images/image_calibration_1.JPG'   
@@ -69,9 +77,9 @@ classdef Cameras
             
 %             viewsLength = length(urlViews);
            viewsLength = 1;
-%             pixelValuesCalibrationPoints = services.Simulator.calculatePointsInImage([-1000 -1350 0 ; 0 -1350 0 ; 1000 -1350 0 ; 0 1350 0 ; -1000 1350 0 ; 1000 1350 0 ; -900 -1250 0 ; 0 -1250 0 ; 900 -1250 0 ; 0 1250 0 ; -900 1250 0 ; 900 1250 0 ; -800 -1150 0 ; 0 -1150 0 ; 800 -1150 0 ; 0 1150 0 ; -800 1150 0 ; 800 1150 0 ; -700 -1050 0 ; 0 -1050 0 ; 700 -1050 0 ; 0 1050 0 ; -700 1050 0 ; 700 1050 0 ; -600 -950 0 ; 0 -950 0 ; 600 -950 0 ; 0 950 0 ; -600 950 0 ; 600 950 0 ; -500 -850 0 ; 0 -850 0 ; 500 -850 0 ; 0 850 0 ; -500 850 0 ; 500 850 0 ; -400 -750 0 ; 0 -750 0 ; 400 -750 0 ; 0 750 0 ; -400 750 0 ; 400 750 0 ; -300 -650 0 ; 0 -650 0 ; 300 -650 0 ; 0 650 0 ; -300 650 0 ; 300 650 0 ; -200 -550 0 ; 0 -550 0 ; 200 -550 0 ; 0 550 0 ; -200 550 0 ; 200 550 0 ; -100 -450 0 ; 0 -450 0 ; 100 -450 0 ; 0 450 0 ; -100 450 0 ; 100 450 0 ; 0 -350 0 ; 0 -350 0 ; 0 -350 0 ; 0 350 0 ; 0 350 0 ; 0 350 0 ; 100 -250 0 ; 0 -250 0 ; -100 -250 0 ; 0 250 0 ; 100 250 0 ; -100 250 0], 3.7, [80.5 60], [320 240]);
+%              pixelValuesCalibrationPoints = services.Simulator.calculatePointsInImage([-1000 -1350 0 ; 0 -1350 0 ; 1000 -1350 0 ; 0 1350 0 ; -1000 1350 0 ; 1000 1350 0 ; -900 -1250 200 ; 0 -1250 200 ; 900 -1250 200 ; 0 1250 200 ; -900 1250 100 ; 900 1250 100 ; -800 -1150 100 ; 0 -1150 0 ; 800 -1150 0 ; 0 1150 0 ; -800 1150 0 ; 800 1150 0 ; -700 -1050 0 ; 0 -1050 0 ; 700 -1050 0 ; 0 1050 0 ; -700 1050 0 ; 700 1050 0 ; -600 -950 0 ; 0 -950 0 ; 600 -950 0 ; 0 950 0 ; -600 950 0 ; 600 950 0 ; -500 -850 0 ; 0 -850 0 ; 500 -850 0 ; 0 850 0 ; -500 850 0 ; 500 850 0 ; -400 -750 0 ; 0 -750 0 ; 400 -750 0 ; 0 750 0 ; -400 750 0 ; 400 750 0 ; -300 -650 0 ; 0 -650 0 ; 300 -650 0 ; 0 650 0 ; -300 650 0 ; 300 650 0 ; -200 -550 0 ; 0 -550 0 ; 200 -550 0 ; 0 550 0 ; -200 550 0 ; 200 550 0 ; -100 -450 0 ; 0 -450 0 ; 100 -450 0 ; 0 450 0 ; -100 450 0 ; 100 450 0 ; 0 -350 0 ; 0 -350 0 ; 0 -350 0 ; 0 350 0 ; 0 350 0 ; 0 350 0 ; 100 -250 0 ; 0 -250 0 ; -100 -250 0 ; 0 250 0 ; 100 250 0 ; -100 250 0], 3.7, [80.5 60], [320 240]);
             
-             pixelValuesCalibrationPoints = [1 30 474 ; 1 292 472 ; 1 553 464 ; 1 290 14; 1 134 16 ; 1 444 11 ; 1 94 188 ; 1 290 185 ; 1 484 180];
+           pixelValuesCalibrationPoints = [1 329 476 ; 1 331 2 ; 1 126 5 ; 1 542 0 ; 1 75 179 ; 1 330 180 ; 1 593 180];
             
 %             pixelValuesCalibrationPoints = [
 %                 1 208 133 ; 1 127 88 ; 1 98 193 ; 1 188 235 ; 1 199 185 ; 1 169 111 ; 1 113 139 ; 1 145 215 ; 1 158 160 ; 1 183 39 ; 1 268 91 ; 
@@ -98,10 +106,6 @@ classdef Cameras
                     rMax = focusLength*tan(thetaMax);
 %                     [mu, mv, u0, v0] = C.getPixelsMappingModel(rMax, views{i});
                     [mu, mv, u0, v0] = C.getPixelsMappingModel(rMax, []);
-%                     mu = 82;
-%                     mv = 59;
-%                     u0=320;
-%                     v0=240;
                 end
                 
                 % Get pixel values of calibrationPoint from the image
@@ -204,9 +208,7 @@ classdef Cameras
             end
             gradientSize = 3 + 6*viewsLength;
             % Optimize
-%             C.drawCameraCurve(k1,k2,k3,k4,k5);
-%             pause(1);
-            for iterations = 1:300000
+            for iterations = 1:200000
                 finalGradient = zeros(1,gradientSize);
                 errorValue = 0;
                 for i1 = 1:length(pixelValuesCalibrationPoints)
@@ -225,15 +227,15 @@ classdef Cameras
                     finalGradient = finalGradient + gradient;
                     errorValue = errorValue + singleErrorValue;
                 end 
-                step = 0.001/norm(finalGradient);
+                step = 1/1000000;
 
                 for i=1:viewsLength
                     for j=1:3
                         angles(i, j) = angles(i, j) - step*finalGradient(3*(i-1)+j);
-                        t(i, j) = t(i, j) - 100*step*finalGradient(3*(viewsLength+i-1)+j);
+                        t(i, j) = t(i, j) - step*finalGradient(3*(viewsLength+i-1)+j);
                     end
                 end
-                focusLength = focusLength - step*finalGradient(6*viewsLength+1);
+%                 focusLength = focusLength - step*finalGradient(6*viewsLength+1);
 %                 k1 = k1 - step*finalGradient(6*viewsLength+1);
 %                 k2 = k2 - step*finalGradient(6*viewsLength+2);
 %                 k3 = k3 - step*finalGradient(6*viewsLength+3);
@@ -246,7 +248,15 @@ classdef Cameras
                     
                 errorValue
             end
-%             C.drawCameraCurve(k1, k2, k3, k4, k5);
+            
+            % Storing parameters
+            fileName = fopen('storage/camera_calibration.dat','w');
+            calibrationData = [
+                angles(1, 1) angles(1, 2) angles(1, 3) t(1, 1) t(1, 2) t(1, 3) focusLength mu mv u0 v0
+            ];
+            fprintf(fileName, '%f %f %f %f %f %f %f %f %f %d %d', calibrationData);
+            fclose(fileName);
+            
             angles
             t
             parameters = [
@@ -257,30 +267,6 @@ classdef Cameras
                 v0
             ];
         end 
-        
-        function drawCameraCurve(C, k1, k2, k3, k4, k5)
-            thetaTest = linspace(0, pi/3, 25);
-            function1 = 3.7*tan(thetaTest);
-            function2 = k1*thetaTest + k2*(thetaTest.^3) +k3*(thetaTest.^5) + k4*(thetaTest.^7) + k5*(thetaTest.^9);
-            plot(thetaTest, function1, thetaTest, function2);
-        end
-        
-        function drawPoints()
-            view = imread('storage/calibration_images/multiple_images/image_calibration_3.JPG');
-            figure;
-            hold on;
-            imgSize = size(view);
-            imagesc([0 imgSize(2)], [0 imgSize(1)], view);
-            pixelValuesCalibrationPoints = [92 78 ; 78 197 ; 232 211 ; 236 95 ; 166 87 ; 85 136 ; 156 204 ; 234 151 ; 161 146];
-            testPoints = [-65.5 55 0 ; -65.5 -55 0 ; 65.5 -55 0 ; 65.5 55 0 ; 0 55 0 ; -65.5 0 0 ; 0 -55 0 ; 65.5 0 0 ; 0 0 0];
-            for i = 1:length(testPoints)
-                pixelValue = classes.Cameras.calculatePosition([testPoints(i,1) ; testPoints(i,2) ; testPoints(i,3)])
-                pixelValue(1) = floor(pixelValue(1))
-                pixelValue(2) = floor(pixelValue(2))
-                plot(pixelValue(1), pixelValue(2), 'o');
-                plot(pixelValuesCalibrationPoints(i,1), pixelValuesCalibrationPoints(i,2), 'x')
-            end
-        end
         
         function pixelPosition = calculatePosition(position)
             R = services.Math.getRotationMatrix(2.7949, 0.7192, -1.7821);
@@ -310,8 +296,10 @@ classdef Cameras
             a = 640;
             b = 480;
             
-            mu = a/(2*rMax);
-            mv = b/(2*rMax);
+            mu = 118;
+            mv = 118;
+%             mu = a/(2*rMax);
+%             mv = b/(2*rMax);
             u0 = a/2;
             v0 = b/2;
         end
@@ -328,15 +316,15 @@ classdef Cameras
         
         function realPosition = getRealPosition(C, m, z)
             lambda = 1;
-            theta = -0.0100;
-            psi = 2.7069;
-            phi = -0.0269;
-            t = [-148.8 ; -300.0 ; 2248.2];
-            focusLength = 4.0696;
-            mu = 107.7478;
-            mv = 102.7468;
-            u0 = 320.0000;
-            v0 = 240.0000;
+            theta = C.parameters(1);
+            psi = C.parameters(2);
+            phi = C.parameters(3);
+            t = [C.parameters(4); C.parameters(5); C.parameters(6)];
+            focusLength = C.parameters(7);
+            mu = C.parameters(8);
+            mv = C.parameters(9);
+            u0 = C.parameters(10);
+            v0 = C.parameters(11);
             
             R = services.Math.getRotationMatrix(psi, theta, phi); 
             T = [R(1, 1) R(1, 2) t(1) ; R(2, 1) R(2, 2) t(2) ; R(3, 1) R(3, 2) t(3)];
@@ -356,15 +344,16 @@ classdef Cameras
         end
         
         function pixelPosition = getRealPixelPosition(C, X)
-            theta = -0.0047;
-            psi = 2.6765;
-            phi = 0.0317;
-            t = [-121.0 ; -344.2 ; 2288.8];
-            focusLength = 4.0285;
-            mu = 110.5405;
-            mv = 106.2789;
-            u0 = 320.0000;
-            v0 = 240.0000;
+            theta = 0.0256;
+            theta = C.parameters(1);
+            psi = C.parameters(2);
+            phi = C.parameters(3);
+            t = [C.parameters(4); C.parameters(5); C.parameters(6)];
+            focusLength = C.parameters(7);
+            mu = C.parameters(8);
+            mv = C.parameters(9);
+            u0 = C.parameters(10);
+            v0 = C.parameters(11);
             
             R = services.Math.getRotationMatrix(psi, theta, phi); 
             Xc = R*X + t;

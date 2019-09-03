@@ -10,6 +10,10 @@ classdef Storage
         function realTopographicMap = getRealTopographicMap()
             realTopographicMap = imread('storage/real_topographic_map.png');
         end
+        
+        function cameraParameters = getCameraParameters()
+            cameraParameters = textread('storage/camera_calibration.dat');
+        end
     end
 end
 

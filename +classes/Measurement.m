@@ -1,6 +1,5 @@
 classdef Measurement
     properties
-        measurementTime = 60;
         type;
         data;
         ledsPosition;
@@ -74,20 +73,12 @@ classdef Measurement
         end
         
         function display(M)
-            disp('measurementTime: ');disp([M.measurementTime]);
             disp('type: ');disp([M.type]);  
             disp('data: ');disp([M.data]);
             disp('ledsPosition: ');disp([M.ledsPosition]);
         end
         
         % Setters
-        function M = set.measurementTime(M, value)
-            if (services.Validator.isGreaterThan(value, 0, 'integer'));
-                M.measurementTime = value;
-            else
-                error('Invalid measurement time')
-            end
-        end
         function M = set.type(M, value)
             possTypes = {'mesh'};
             if (services.Validator.inList(value, possTypes));

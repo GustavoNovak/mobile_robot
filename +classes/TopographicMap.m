@@ -36,6 +36,8 @@ classdef TopographicMap
                                 response = false;
                                 break;
                             end
+                        else
+                            response = false;
                         end  
                     end
                 end

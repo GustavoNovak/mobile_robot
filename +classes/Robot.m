@@ -1,6 +1,6 @@
 classdef Robot
     properties
-        connection;
+        connection = '';
         cameras;
         diameter;
         toolZone;
@@ -11,7 +11,7 @@ classdef Robot
     
     methods        
         function R = Robot(diameter, toolZone, sensorsPosition, maxLinearVelocity, maxAngularVelocity)
-            R.connection = tcpclient('127.0.0.1', 444);
+%             R.connection = tcpclient('127.0.0.1', 444);
             R.cameras = classes.Cameras();
             R.diameter = diameter;
             R.toolZone = R.generateToolZone(toolZone);
@@ -20,16 +20,16 @@ classdef Robot
             R.maxAngularVelocity = maxAngularVelocity;
         end
         
-        function R = setVelocity(R, V, t)
+        function R = setVelocity(R, V)
             vx = strcat('VX', num2str(V(1)));
             vy = strcat('VY', num2str(V(2)));
             phi = strcat('PHI', num2str(V(3)));
-            data = uint8(strcat(vx, vy, phi));
-            write(R.connection, data);
+%             data = uint8(strcat(vx, vy, phi));
+%             write(R.connection, data);
         end
         
-        function [x, y, phi] = getPosition(R)
-            [x, y, phi] = R.cameras.getRobotPosition();
+        function [x, y, phi] = getPosition(R, pixelPosition)
+            [x, y, phi] = R.cameras.getRobotPosition(pixelPosition);
             x = x + 55*cos(phi);
             y = y + 55*sin(phi);
             pixelPosition = R.cameras.getRealPixelPosition([x ; y ; 0]);

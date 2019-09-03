@@ -31,7 +31,7 @@ classdef Path
                         break;
                     end 
                 
-                    theta = theta + (2*pi/36);
+                    theta = theta + (2*pi/100);
                 end 
                 
                 i = i + 1;
@@ -39,7 +39,7 @@ classdef Path
             disp('Robot Positions in Measurement Points: ');
             disp(points);
                
-            [x, y, phi] = P.robot.getPosition()
+            [x, y, phi] = P.robot.getPosition([1 1])
             
             path1 = services.PathPlanning.generatePath([x y phi], points(1, :), P.topographicMap, P.measurement);
             count = 0;
@@ -87,9 +87,6 @@ classdef Path
                 pixelPosition = P.robot.cameras.getRealPixelPosition([points(i, 1) ; points(i, 2) ; 0]);
                 plot(pixelPosition(1), pixelPosition(2), 'o');
             end
-        end
-        
-        function display(P)
         end
         
         function P = set.topographicMap(P, value)
