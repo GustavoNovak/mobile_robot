@@ -3,14 +3,15 @@ classdef PathPlanning
     end
     
     methods (Static)      
-        function optimizedPath = generatePath(startPoint, endPoint, topographicMap, measurement)
+        function optimizedPath = generatePath(startPoint, endPoint, topographicMap, measurement, camerasClass)
             % Setting up constants
             step = 50;
             beta = 100;
-            [width, height] = measurement.getChamberSize();
+            width = measurement.chamberSize(1);
+            height = measurement.chamberSize(2);
             solutionFound = false;
-            if (~topographicMap.isFree(endPoint))
-                disp('colision endPoint');
+            if (~topographicMap.isFree(startPoint, camerasClass) || ~topographicMap.isFree(endPoint, camerasClass))
+                msgbox('One position in the path is not free', 'Error', 'error');
             end
             % Generating RRT*-double-optimized path
 %             figure;
@@ -29,7 +30,7 @@ classdef PathPlanning
 
                 [nearstNode, index] = services.PathPlanning.getNearestNode(sample, tree, actualTree);
                 newNode = services.PathPlanning.generateNewNode(nearstNode, sample, step);
-                [idParent, distance] = services.PathPlanning.getParent(newNode, tree, actualTree, beta, topographicMap, measurement);
+                [idParent, distance] = services.PathPlanning.getParent(newNode, tree, actualTree, beta, topographicMap, camerasClass);
                 if (idParent ~= 0)
 %                     plot(newNode(1), newNode(2), 'o');
                     count = count + 1;
@@ -44,14 +45,14 @@ classdef PathPlanning
                         actualTree = 1;
                     end
 
-                    if (~services.PathPlanning.verifyCollision(nearestNodeOtherTree, newNode, topographicMap)) 
+                    if (~services.PathPlanning.verifyCollision(nearestNodeOtherTree, newNode, topographicMap, camerasClass)) 
                         if (actualTree == 1)
                             primitivePath = services.PathPlanning.getPrimitivePath(tree, count, indexNearestNode);
                         else
                             primitivePath = services.PathPlanning.getPrimitivePath(tree, indexNearestNode, count);
                         end
 
-                        optimizedPath = services.PathPlanning.optimizePath(primitivePath, topographicMap, measurement);
+                        optimizedPath = services.PathPlanning.optimizePath(primitivePath, topographicMap, camerasClass);
 
                         solutionFound = true;
                         disp('Solution Found!');
@@ -76,17 +77,19 @@ classdef PathPlanning
 %                 for i = 1:(length(optimizedPath) - 1)
 %                     plot([optimizedPath(i, 1) optimizedPath(i+1, 1)], [optimizedPath(i, 2) optimizedPath(i+1, 2)], '*-');
 %                 end
+            else
+                msgbox('A solution to one position in the path was not found, verify if robot is into the workspace', 'Error', 'error');
             end
         end
         
-        function path = optimizePath(primitivePath, topographicMap, measurement)
+        function path = optimizePath(primitivePath, topographicMap, camerasClass)
             count = 1;
             index = 0;
             path(1, :) = primitivePath(1, :);
             for i = 1:(length(primitivePath)-1)
                 if (i >= index)
                     for j = i+1:length(primitivePath)
-                        if (services.PathPlanning.verifyCollision(primitivePath(i, :), primitivePath(j, :), topographicMap))
+                        if (services.PathPlanning.verifyCollision(primitivePath(i, :), primitivePath(j, :), topographicMap, camerasClass))
                             count = count + 1;
                             path(count, :) = primitivePath(j-1, :);
                             index = j - 1; 
@@ -138,7 +141,7 @@ classdef PathPlanning
             primitivePath = path;
         end
         
-        function [idParent, minDistance] = getParent(newNode, tree, actualTree, beta, topographicMap, measurement)
+        function [idParent, minDistance] = getParent(newNode, tree, actualTree, beta, topographicMap, camerasClass)
             aux = size(tree);
             lastIndexTree = aux(1);
             
@@ -170,13 +173,13 @@ classdef PathPlanning
                     if (distance < beta)    
                         distance = distance + tree(i, 5);
                         if (minDistance == 1000000)
-                            if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap))
+                            if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap, camerasClass))
                                 idParent = i;
                                 minDistance = distance; 
                             end
                         else
                             if (distance < minDistance)
-                                if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap))
+                                if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap, camerasClass))
                                     idParent = i;
                                     minDistance = distance;
                                 end
@@ -199,7 +202,7 @@ classdef PathPlanning
                         if (distance < beta)    
                             distance = distance + tree(newNodeIndex, 5);
                             if (distance < tree(i, 5))
-                                if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap))
+                                if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap, camerasClass))
                                     tree(i, 4) = newNodeIndex;
                                     tree(i, 5) = distance;
                                 end
@@ -278,27 +281,9 @@ classdef PathPlanning
             end
         end
         
-        function response = verifyCollision(startPoint, endPoint, topographicMap)
+        function response = verifyCollision(startPoint, endPoint, topographicMap, camerasClass)
             vector = endPoint - startPoint;
-            if(endPoint(3) >= 0 && startPoint(3) >= 0)
-                errorPhi = endPoint(3) - startPoint(3);
-            elseif(endPoint(3) < 0 && startPoint(3) >= 0)
-                positiveDistance = 2*pi - startPoint(3) + endPoint(3);
-                if(positiveDistance <= pi)
-                    errorPhi = positiveDistance;
-                else
-                    errorPhi = endPoint(3) - startPoint(3);
-                end
-            elseif(endPoint(3) >= 0 && startPoint(3) < 0)
-                positiveDistance = endPoint(3) - startPoint(3);
-                if(positiveDistance <= pi)
-                    errorPhi = positiveDistance;
-                else
-                    errorPhi = 2*pi + startPoint(3) - endPoint(3);
-                end                            
-            elseif(endPoint(3) < 0 && startPoint(3) < 0)
-                errorPhi = endPoint(3) - startPoint(3);
-            end
+            errorPhi = endPoint(3) - startPoint(3);
             
             vectorMagnitude = norm([vector(1) vector(2) errorPhi]);
             
@@ -317,7 +302,7 @@ classdef PathPlanning
                     point(3) = -2*pi + point(3);
                 end
                 
-                if (~topographicMap.isFree(point))
+                if (~topographicMap.isFree(point, camerasClass))
                     response = true;
                     break;
                 end

@@ -24,12 +24,12 @@ classdef Storage
         end
         
         function storePath(path)
-            save('storage/path.mat','path');
+            save('path.mat','path');
         end
         
         function path = getPath()
-            stored = matfile('storage/path.mat');
-            path = stored.path;
+            ma = matfile('path.mat');
+            path = example.path;
         end
     end
 end

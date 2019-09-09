@@ -28,7 +28,6 @@ classdef Images
             imgToVerify = img;
             
             for i=1:imageSize(1)
-                pourcentage = (i/imageSize(1))*100
                 for j=1:imageSize(2)
                     if (imgToVerify(i,j) == 1)
                         if(BWsdil(i,j) == 1)
@@ -244,6 +243,11 @@ classdef Images
                     pixelPoints(count,:) = [i pixelValues(1) pixelValues(2)]; 
                 end
             end
+            
+%             function getCalibrationPoints(cameras)
+% %                 img = 
+%                  
+%             end
         end
     end
 end

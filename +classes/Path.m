@@ -12,36 +12,40 @@ classdef Path
             P.robot = robot;
         end
         
-        function path = generate(P)
+        function path = generate(P, initialPosition, camerasClass)  
             % Transform measurement point in robot positions and delete not reachable points
             measurementPoints = P.measurement.getMeasurementPoints();
             disp('Measurement Points: ');
-            disp(measurementPoints);
-            
+            disp(measurementPoints);            
             count = 0;
             i = 1;
             while i <= length(measurementPoints)
-                theta = -pi;
+                theta = 0;
                 while theta <= pi  
-                    robotPosition = services.Math.getRobotPosition(measurementPoints(i, :), theta, P.topographicMap.robot);
+                    robotPosition = services.Math.getRobotPosition(measurementPoints(i, :), -theta, P.robot);
           
-                    if (P.topographicMap.isFree(robotPosition))
+                    if (P.topographicMap.isFree(robotPosition, camerasClass))
+                        count = count + 1;
+                        points(count, :) = robotPosition;
+                        break;
+                    end 
+                    
+                    robotPosition = services.Math.getRobotPosition(measurementPoints(i, :), theta, P.robot);
+          
+                    if (P.topographicMap.isFree(robotPosition, camerasClass))
                         count = count + 1;
                         points(count, :) = robotPosition;
                         break;
                     end 
                 
-                    theta = theta + (2*pi/100);
+                    theta = theta + pi/100;
                 end 
                 
                 i = i + 1;
             end
             disp('Robot Positions in Measurement Points: ');
             disp(points);
-               
-            [x, y, phi] = P.robot.getPosition([1 1])
-            
-            path1 = services.PathPlanning.generatePath([x y phi], points(1, :), P.topographicMap, P.measurement);
+            path1 = services.PathPlanning.generatePath(initialPosition, points(1, :), P.topographicMap, P.measurement, camerasClass);
             count = 0;
             lengthPath1 = size(path1);
             lengthPath1 = lengthPath1(1);
@@ -60,7 +64,7 @@ classdef Path
             lengthPoints = lengthPoints(1);
             if (lengthPoints > 1)
                 for j = 1: (lengthPoints-1)
-                    newPath = services.PathPlanning.generatePath(points(j, :), points(j+1, :), P.topographicMap, P.measurement);
+                    newPath = services.PathPlanning.generatePath(points(j, :), points(j+1, :), P.topographicMap, P.measurement, camerasClass);
                     lengthNewPath = size(newPath);
                     lengthNewPath = lengthNewPath(1);                    
                     for i = 1: lengthNewPath
@@ -76,15 +80,15 @@ classdef Path
                 end
             end
             disp('Generated Path');
-            path
-            for i = 1:(length(path) - 1)
-                startPixelPosition = P.robot.cameras.getRealPixelPosition([path(i, 1) ; path(i, 2) ; 0]);
-                endPixelPosition = P.robot.cameras.getRealPixelPosition([path(i+1, 1) ; path(i+1, 2) ; 0]);
+            sizePath = size(path);
+            for i = 1:(sizePath(1) - 1)
+                startPixelPosition = camerasClass.getRealPixelPosition([path(i, 1) ; path(i, 2) ; 0]);
+                endPixelPosition = camerasClass.getRealPixelPosition([path(i+1, 1) ; path(i+1, 2) ; 0]);
                 plot([startPixelPosition(1) endPixelPosition(1)], [startPixelPosition(2) endPixelPosition(2)], '*-');
             end
             
             for i = 1:lengthPoints
-                pixelPosition = P.robot.cameras.getRealPixelPosition([points(i, 1) ; points(i, 2) ; 0]);
+                pixelPosition = camerasClass.getRealPixelPosition([points(i, 1) ; points(i, 2) ; 0]);
                 plot(pixelPosition(1), pixelPosition(2), 'o');
             end
         end

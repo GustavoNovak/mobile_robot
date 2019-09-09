@@ -12,8 +12,8 @@ classdef TopographicMap
             T.robot = robot;
         end
         
-        function response = isFree(T, robotPosition)
-            pixelPosition = T.robot.cameras.getRealPixelPosition([robotPosition(1) ; robotPosition(2) ; 0]);
+        function response = isFree(T, robotPosition, camerasClass)
+            pixelPosition = camerasClass.getRealPixelPosition([robotPosition(1) ; robotPosition(2) ; 0]);
             pixelPosition = [floor(pixelPosition(1)) floor(pixelPosition(2))]; 
             response = false;
             mapSize = size(T.map);
@@ -29,7 +29,7 @@ classdef TopographicMap
                 if(lengthToolZone > 0)
                     for i = 1:lengthToolZone
                         point = [robotPosition(1) robotPosition(2)] + [cos(robotPosition(3) + T.robot.toolZone(i,1))*T.robot.toolZone(i,2) sin(robotPosition(3) + T.robot.toolZone(i,1))*T.robot.toolZone(i,2)];
-                        pixelPosition = T.robot.cameras.getRealPixelPosition([point(1) ; point(2) ; 0]);
+                        pixelPosition = camerasClass.getRealPixelPosition([point(1) ; point(2) ; 0]);
                         pixelPosition = [floor(pixelPosition(1)) floor(pixelPosition(2))];  
                         if ((pixelPosition(1) > 1 && pixelPosition(2) > 1) && (pixelPosition(2) <= mapSize(1) && pixelPosition(1) <= mapSize(2)))
                             if (T.realMap(pixelPosition(2), pixelPosition(1)) == 0)

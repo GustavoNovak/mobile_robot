@@ -1,0 +1,94 @@
+<deployment-project plugin="plugin.apptool" plugin-version="1.0">
+  <configuration build-checksum="2586383070" file="C:\Users\gusta\OneDrive\Área de Trabalho\INSA\STAGE\projet\matlab_program\Positionneur.prj" location="C:\Users\gusta\OneDrive\Área de Trabalho\INSA\STAGE\projet\matlab_program" name="Positionneur" target="target.mlapps" target-name="Package App">
+    <param.appname>Positionneur</param.appname>
+    <param.authnamewatermark>Gustavo Afonso Novak</param.authnamewatermark>
+    <param.email>gnovak@insa-rennes.fr</param.email>
+    <param.company>Rennes 1</param.company>
+    <param.icon>${PROJECT_ROOT}\Positionneur_resources\icon_24.png</param.icon>
+    <param.icons>
+      <file>${PROJECT_ROOT}\Positionneur_resources\icon_48.png</file>
+      <file>${PROJECT_ROOT}\Positionneur_resources\icon_24.png</file>
+      <file>${PROJECT_ROOT}\Positionneur_resources\icon_16.png</file>
+    </param.icons>
+    <param.summary />
+    <param.description>A system to positionate sensors in a climate chamber</param.description>
+    <param.screenshot />
+    <param.version>1.0</param.version>
+    <param.products.name />
+    <param.products.id />
+    <param.products.version />
+    <param.platforms />
+    <param.output>C:\Users\gusta\OneDrive\Área de Trabalho\INSA\STAGE\projet\matlab_program</param.output>
+    <param.guid>f2c89e3c-f927-4fe1-a640-b27b6b0ec683</param.guid>
+    <unset>
+      <param.summary />
+      <param.screenshot />
+      <param.version />
+      <param.products.name />
+      <param.products.id />
+      <param.products.version />
+      <param.platforms />
+      <param.output />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\App.mlapp</file>
+    </fileset.main>
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}\+classes\Cameras.m</file>
+      <file>${PROJECT_ROOT}\+functions\polyfitoddlsq.m</file>
+      <file>${PROJECT_ROOT}\+services\Images.m</file>
+      <file>${PROJECT_ROOT}\+services\Math.m</file>
+      <file>${PROJECT_ROOT}\+services\Storage.m</file>
+    </fileset.depfun>
+    <fileset.resources />
+    <fileset.package />
+    <build-deliverables>
+      <file location="C:\Users\gusta\OneDrive\Área de Trabalho\INSA\STAGE\projet" name="matlab_program" optional="false">C:\Users\gusta\OneDrive\Área de Trabalho\INSA\STAGE\projet\matlab_program</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2016a</root>
+      <toolboxes>
+        <toolbox name="fixedpoint" />
+        <toolbox name="matlabcoder" />
+        <toolbox name="matlabhdlcoder" />
+        <toolbox name="embeddedcoder" />
+      </toolboxes>
+      <toolbox>
+        <fixedpoint>
+          <enabled>true</enabled>
+        </fixedpoint>
+      </toolbox>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+      <toolbox>
+        <matlabhdlcoder>
+          <enabled>true</enabled>
+        </matlabhdlcoder>
+      </toolbox>
+      <toolbox>
+        <embeddedcoder>
+          <enabled>true</enabled>
+        </embeddedcoder>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>6.2</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

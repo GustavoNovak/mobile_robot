@@ -73,8 +73,9 @@ classdef Index
                 system('TASKKILL -f -im "interface_cpp.exe"');
                 return;
             end
-            
+           
             camerasClass = classes.Cameras();
+            measurement = classes.Measurement('mesh', [400 440], [-1200 1400 ; 1200 1400 ; 1200 -1400 ; -1200 -1400]);
             topographicMap = classes.TopographicMap(robot);
             imagesc([0 640], [0 480], topographicMap.map);
             sizePath = size(path);

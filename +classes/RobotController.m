@@ -10,7 +10,7 @@ classdef RobotController
             R.path = path;
         end
         
-        function moveInPath(R)
+        function moveInPath(R, camerasClass, cameras)
             Kp = 1.5;
             Ki = 0.0;
             Kp_phi = 1.3;
@@ -36,12 +36,12 @@ classdef RobotController
                     count = 1;
                     while (positionError > 10 || angularError > 0.05 || velocityMagnitude > 50 || x == -999999)
                         if(x == -999999)
-                            pixelPosition = R.robot.cameras.getRealPixelPosition([0 ; 0 ; 220])
+                            pixelPosition = camerasClass.getRealPixelPosition([0 ; 0 ; 220]);
                         else
-                            pixelPosition = R.robot.cameras.getRealPixelPosition([x ; y ; 220])
+                            pixelPosition = camerasClass.getRealPixelPosition([x ; y ; 220]);
                         end
                         
-                        [x_new, y_new, phi_new] = R.robot.getPosition(pixelPosition);
+                        [x_new, y_new, phi_new] = R.robot.getPosition(pixelPosition, camerasClass, cameras);
                         if (x_new ~= -999999)
                             x = x_new;
                             y = y_new;
@@ -55,25 +55,7 @@ classdef RobotController
                             oldErrorPhi = errorPhi;
 %                             errorX = R.path(i, 1) - x; 
 %                             errorY = R.path(i, 2) - y;
-                            if(R.path(i, 3) >= 0 && phi >= 0)
-                                errorPhi = R.path(i, 3) - phi;
-                            elseif(R.path(i, 3) < 0 && phi >= 0)
-                                positiveDistance = 2*pi - phi + R.path(i, 3);
-                                if(positiveDistance <= pi)
-                                    errorPhi = positiveDistance;
-                                else
-                                    errorPhi = R.path(i, 3) - phi;
-                                end
-                            elseif(R.path(i, 3) >= 0 && phi < 0)
-                                positiveDistance = R.path(i, 3) - phi;
-                                if(positiveDistance <= pi)
-                                    errorPhi = positiveDistance;
-                                else
-                                    errorPhi = 2*pi + phi - R.path(i, 3);
-                                end                            
-                            elseif(R.path(i, 3) < 0 && phi < 0)
-                                errorPhi = R.path(i, 3) - phi;
-                            end
+                            errorPhi = R.path(i, 3) - phi;
 %                             integralErrorX = integralErrorX + ((oldErrorX + errorX)/2)*t;
 %                             integralErrorY = integralErrorY + ((oldErrorY + errorY)/2)*t;
 %                             integralErrorPhi = integralErrorPhi + ((oldErrorPhi + errorPhi)/2)*t;
@@ -135,13 +117,13 @@ classdef RobotController
                     count = 1;
                     while (positionError > 5 || angularError > 0.03 || velocityMagnitude > 10 || Vphi > 0.1 || x == -999999)
                         if(x == -999999)
-                            pixelPosition = R.robot.cameras.getRealPixelPosition([0 ; 0 ; 220]);
+                            pixelPosition = camerasClass.getRealPixelPosition([0 ; 0 ; 220]);
                         else
-                            pixelPosition = R.robot.cameras.getRealPixelPosition([x ; y ; 220]);
+                            pixelPosition = camerasClass.getRealPixelPosition([x ; y ; 220]);
                         end
                         
                         tic;
-                        [x_new, y_new, phi_new] = R.robot.getPosition(pixelPosition);
+                        [x_new, y_new, phi_new] = R.robot.getPosition(pixelPosition, camerasClass, cameras);
                         t = toc;
                         if (x_new ~= -999999)
                             x = x_new;
@@ -156,25 +138,7 @@ classdef RobotController
                             oldErrorPhi = errorPhi;
 %                             errorX = R.path(i, 1) - x; 
 %                             errorY = R.path(i, 2) - y;
-                            if(R.path(i, 3) >= 0 && phi >= 0)
-                                errorPhi = R.path(i, 3) - phi;
-                            elseif(R.path(i, 3) < 0 && phi >= 0)
-                                positiveDistance = 2*pi - phi + R.path(i, 3);
-                                if(positiveDistance <= pi)
-                                    errorPhi = positiveDistance;
-                                else
-                                    errorPhi = R.path(i, 3) - phi;
-                                end
-                            elseif(R.path(i, 3) >= 0 && phi < 0)
-                                positiveDistance = R.path(i, 3) - phi;
-                                if(positiveDistance <= pi)
-                                    errorPhi = positiveDistance;
-                                else
-                                    errorPhi = 2*pi + phi - R.path(i, 3);
-                                end                            
-                            elseif(R.path(i, 3) < 0 && phi < 0)
-                                errorPhi = R.path(i, 3) - phi;
-                            end
+                            errorPhi = R.path(i, 3) - phi;
 %                             integralErrorX = integralErrorX + ((oldErrorX + errorX)/2)*t;
 %                             integralErrorY = integralErrorY + ((oldErrorY + errorY)/2)*t;
 %                             integralErrorPhi = integralErrorPhi + ((oldErrorPhi + errorPhi)/2)*t;

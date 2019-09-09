@@ -2,34 +2,21 @@ classdef Measurement
     properties
         type;
         data;
-        ledsPosition;
+        chamberSize;
     end
     
     methods
-        function M = Measurement(type, data, ledsPosition)
+        function M = Measurement(type, data, chamberSize)
             M.type = type;
             M.data = data;
-            M.ledsPosition = ledsPosition;
-        end
-        
-        function [width, height] = getChamberSize(M)
-            firstLed = M.ledsPosition(1,:);
-            secondLed = M.ledsPosition(2,:);
-            thirdLed = M.ledsPosition(3,:);
-            if (firstLed(1) == secondLed(1))
-                height = abs(firstLed(2) - secondLed(2));
-                width = abs(secondLed(1) - thirdLed(3));
-            else
-                width = abs(firstLed(1) - secondLed(1));
-                height = abs(secondLed(2) - thirdLed(2));
-            end
+            M.chamberSize = chamberSize;
         end
         
         function points = getMeasurementPoints(M)
-            [width, height] = M.getChamberSize()
+            size = M.chamberSize;
             
-            width = width - 500;
-            height = height - 500;
+            width = size(1);
+            height = size(2);
             count = 0;
             switch M.type
                 case 'mesh'
@@ -99,11 +86,11 @@ classdef Measurement
                     error('You need to define before the type of Measurement');
             end
         end
-        function M = set.ledsPosition(M, value)
-            if (services.Validator.isMatrix(value, [4 2], 'float'))
-                M.ledsPosition = value;
+        function M = set.chamberSize(M, value)
+            if (services.Validator.isMatrix(value, [1 2], 'float'))
+                M.chamberSize = value;
             else
-                error('Invalid led positions values');
+                error('Invalid chamber size value');
             end
         end
     end

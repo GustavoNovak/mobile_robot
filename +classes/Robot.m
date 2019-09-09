@@ -1,7 +1,6 @@
 classdef Robot
     properties
         connection = '';
-        cameras;
         diameter;
         toolZone;
         sensorsPosition;
@@ -12,7 +11,6 @@ classdef Robot
     methods        
         function R = Robot(diameter, toolZone, sensorsPosition, maxLinearVelocity, maxAngularVelocity)
 %             R.connection = tcpclient('127.0.0.1', 444);
-            R.cameras = classes.Cameras();
             R.diameter = diameter;
             R.toolZone = R.generateToolZone(toolZone);
             R.sensorsPosition = sensorsPosition;
@@ -28,11 +26,11 @@ classdef Robot
 %             write(R.connection, data);
         end
         
-        function [x, y, phi] = getPosition(R, pixelPosition)
-            [x, y, phi] = R.cameras.getRobotPosition(pixelPosition);
-            x = x + 55*cos(phi);
-            y = y + 55*sin(phi);
-            pixelPosition = R.cameras.getRealPixelPosition([x ; y ; 0]);
+        function [x, y, phi] = getPosition(R, pixelPosition, camerasClass, cameras)
+            [x, y, phi] = camerasClass.getRobotPosition(pixelPosition, cameras);
+            x = x + 75*cos(phi);
+            y = y + 75*sin(phi);
+            pixelPosition = camerasClass.getRealPixelPosition([x ; y ; 0]);
             if (x > -9000 && y > -9000)
                 plot(pixelPosition(1), pixelPosition(2), 'o'); 
             else
@@ -111,10 +109,6 @@ classdef Robot
 %             for i=1:length(mesh)
 %                 plot(mesh(i, 1), mesh(i, 2), 'o');
 %             end
-        end
-        
-        function delete(R)
-            R.cameras.delete();
         end
         
         function display(R)
