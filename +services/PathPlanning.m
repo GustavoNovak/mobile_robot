@@ -10,7 +10,7 @@ classdef PathPlanning
             width = measurement.chamberSize(1);
             height = measurement.chamberSize(2);
             solutionFound = false;
-            if (~topographicMap.isFree(startPoint, camerasClass) || ~topographicMap.isFree(endPoint, camerasClass))
+            if (~topographicMap.isFree(startPoint) || ~topographicMap.isFree(endPoint))
                 msgbox('One position in the path is not free', 'Error', 'error');
             end
             % Generating RRT*-double-optimized path
@@ -30,12 +30,12 @@ classdef PathPlanning
 
                 [nearstNode, index] = services.PathPlanning.getNearestNode(sample, tree, actualTree);
                 newNode = services.PathPlanning.generateNewNode(nearstNode, sample, step);
-                [idParent, distance] = services.PathPlanning.getParent(newNode, tree, actualTree, beta, topographicMap, camerasClass);
+                [idParent, distance] = services.PathPlanning.getParent(newNode, tree, actualTree, beta, topographicMap);
                 if (idParent ~= 0)
 %                     plot(newNode(1), newNode(2), 'o');
                     count = count + 1;
                     tree(count, :) = [newNode(1) newNode(2) newNode(3) idParent distance actualTree];
-                    tree = services.PathPlanning.reWrite(count, newNode, tree, actualTree, beta, topographicMap, measurement);
+                    tree = services.PathPlanning.reWrite(count, newNode, tree, actualTree, beta, topographicMap);
 
                     if (actualTree == 1)
                         [nearestNodeOtherTree, indexNearestNode] = services.PathPlanning.getNearestNode(newNode, tree, 0);
@@ -45,7 +45,7 @@ classdef PathPlanning
                         actualTree = 1;
                     end
 
-                    if (~services.PathPlanning.verifyCollision(nearestNodeOtherTree, newNode, topographicMap, camerasClass)) 
+                    if (~services.PathPlanning.verifyCollision(nearestNodeOtherTree, newNode, topographicMap)) 
                         if (actualTree == 1)
                             primitivePath = services.PathPlanning.getPrimitivePath(tree, count, indexNearestNode);
                         else
@@ -89,7 +89,7 @@ classdef PathPlanning
             for i = 1:(length(primitivePath)-1)
                 if (i >= index)
                     for j = i+1:length(primitivePath)
-                        if (services.PathPlanning.verifyCollision(primitivePath(i, :), primitivePath(j, :), topographicMap, camerasClass))
+                        if (services.PathPlanning.verifyCollision(primitivePath(i, :), primitivePath(j, :), topographicMap))
                             count = count + 1;
                             path(count, :) = primitivePath(j-1, :);
                             index = j - 1; 
@@ -141,7 +141,7 @@ classdef PathPlanning
             primitivePath = path;
         end
         
-        function [idParent, minDistance] = getParent(newNode, tree, actualTree, beta, topographicMap, camerasClass)
+        function [idParent, minDistance] = getParent(newNode, tree, actualTree, beta, topographicMap)
             aux = size(tree);
             lastIndexTree = aux(1);
             
@@ -150,36 +150,17 @@ classdef PathPlanning
             for i = 1: lastIndexTree
                 if (tree(i, 6) == actualTree)
                     Spoint = [tree(i,1) tree(i,2) tree(i,3)];
-                    if(tree(i, 3) >= 0 && newNode(3) >= 0)
-                        angleError = tree(i, 3) - newNode(3);
-                    elseif(tree(i, 3) < 0 && newNode(3) >= 0)
-                        positiveDistance = 2*pi - newNode(3) + tree(i, 3);
-                        if(positiveDistance <= pi)
-                            angleError = positiveDistance;
-                        else
-                            angleError = tree(i, 3) - newNode(3);
-                        end
-                    elseif(tree(i, 3) >= 0 && newNode(3) < 0)
-                        positiveDistance = tree(i, 3) - newNode(3);
-                        if(positiveDistance <= pi)
-                            angleError = positiveDistance;
-                        else
-                            angleError = 2*pi + newNode(3) - tree(i, 3);
-                        end                            
-                    elseif(tree(i, 3) < 0 && newNode(3) < 0)
-                        angleError = tree(i, 3) - newNode(3);
-                    end
-                    distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2 + angleError^2)^0.5; 
+                    distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2 + (800*(newNode(3) - tree(i,3)))^2)^0.5; 
                     if (distance < beta)    
                         distance = distance + tree(i, 5);
                         if (minDistance == 1000000)
-                            if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap, camerasClass))
+                            if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap))
                                 idParent = i;
                                 minDistance = distance; 
                             end
                         else
                             if (distance < minDistance)
-                                if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap, camerasClass))
+                                if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap))
                                     idParent = i;
                                     minDistance = distance;
                                 end
@@ -190,7 +171,7 @@ classdef PathPlanning
             end
         end
         
-        function tree = reWrite(newNodeIndex, newNode, tree, actualTree, beta, topographicMap, measurement)
+        function tree = reWrite(newNodeIndex, newNode, tree, actualTree, beta, topographicMap)
             aux = size(tree);
             lastIndexTree = aux(1);
 
@@ -198,11 +179,11 @@ classdef PathPlanning
                 if (tree(i, 6) == actualTree)
                     if (i ~= newNodeIndex)
                         Spoint = [tree(i,1) tree(i,2) tree(i,3)];
-                        distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2)^0.5; 
+                        distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2 + (800*(newNode(3) - tree(i,3)))^2)^0.5; 
                         if (distance < beta)    
                             distance = distance + tree(newNodeIndex, 5);
                             if (distance < tree(i, 5))
-                                if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap, camerasClass))
+                                if (~services.PathPlanning.verifyCollision(Spoint, newNode, topographicMap))
                                     tree(i, 4) = newNodeIndex;
                                     tree(i, 5) = distance;
                                 end
@@ -230,47 +211,9 @@ classdef PathPlanning
                     if minDistance == 1000000
                         index = i;
                         nearest_node = [tree(i, 1) tree(i, 2) tree(i, 3)];
-                        if(tree(i, 3) >= 0 && newNode(3) >= 0)
-                            angleError = tree(i, 3) - newNode(3);
-                        elseif(tree(i, 3) < 0 && newNode(3) >= 0)
-                            positiveDistance = 2*pi - newNode(3) + tree(i, 3);
-                            if(positiveDistance <= pi)
-                                angleError = positiveDistance;
-                            else
-                                angleError = tree(i, 3) - newNode(3);
-                            end
-                        elseif(tree(i, 3) >= 0 && newNode(3) < 0)
-                            positiveDistance = tree(i, 3) - newNode(3);
-                            if(positiveDistance <= pi)
-                                angleError = positiveDistance;
-                            else
-                                angleError = 2*pi + newNode(3) - tree(i, 3);
-                            end                            
-                        elseif(tree(i, 3) < 0 && newNode(3) < 0)
-                            angleError = tree(i, 3) - newNode(3);
-                        end
-                        minDistance = ((newNode(1) - tree(i, 1))^2 + (newNode(2) - tree(i, 2))^2 + angleError^2)^0.5;
+                        minDistance = ((newNode(1) - tree(i, 1))^2 + (newNode(2) - tree(i, 2))^2 + (800*(newNode(3) - tree(i, 3)))^2)^0.5;
                     else
-                        if(tree(i, 3) >= 0 && newNode(3) >= 0)
-                            angleError = tree(i, 3) - newNode(3);
-                        elseif(tree(i, 3) < 0 && newNode(3) >= 0)
-                            positiveDistance = 2*pi - newNode(3) + tree(i, 3);
-                            if(positiveDistance <= pi)
-                                angleError = positiveDistance;
-                            else
-                                angleError = tree(i, 3) - newNode(3);
-                            end
-                        elseif(tree(i, 3) >= 0 && newNode(3) < 0)
-                            positiveDistance = tree(i, 3) - newNode(3);
-                            if(positiveDistance <= pi)
-                                angleError = positiveDistance;
-                            else
-                                angleError = 2*pi + newNode(3) - tree(i, 3);
-                            end                            
-                        elseif(tree(i, 3) < 0 && newNode(3) < 0)
-                            angleError = tree(i, 3) - newNode(3);
-                        end
-                        distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2 + angleError^2)^0.5;
+                        distance = ((newNode(1) - tree(i,1))^2 + (newNode(2) - tree(i,2))^2 + (800*(newNode(3) - tree(i, 3)))^2)^0.5;
                         if (distance < minDistance)
                             index = i;
                             nearest_node = [tree(i, 1) tree(i, 2) tree(i, 3)];
@@ -281,7 +224,7 @@ classdef PathPlanning
             end
         end
         
-        function response = verifyCollision(startPoint, endPoint, topographicMap, camerasClass)
+        function response = verifyCollision(startPoint, endPoint, topographicMap)
             vector = endPoint - startPoint;
             errorPhi = endPoint(3) - startPoint(3);
             
@@ -297,12 +240,12 @@ classdef PathPlanning
             while t <= 1
                 point = startPoint + t*vector;
                 if(point(3) < -pi)
-                    point(3) = 2*pi + point(3);
+                    msgbox('phi is passing -pi in pathPlanning verifyCollision');
                 elseif(point(3) > pi)
-                    point(3) = -2*pi + point(3);
+                    msgbox('phi is passing +pi in pathPlanning verifyCollision');
                 end
                 
-                if (~topographicMap.isFree(point, camerasClass))
+                if (~topographicMap.isFree(point))
                     response = true;
                     break;
                 end

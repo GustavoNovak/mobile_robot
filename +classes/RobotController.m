@@ -36,12 +36,12 @@ classdef RobotController
                     count = 1;
                     while (positionError > 10 || angularError > 0.05 || velocityMagnitude > 50 || x == -999999)
                         if(x == -999999)
-                            pixelPosition = camerasClass.getRealPixelPosition([0 ; 0 ; 220]);
+                            robotPosition = [0 0 0];
                         else
-                            pixelPosition = camerasClass.getRealPixelPosition([x ; y ; 220]);
+                            robotPosition = [x y phi];
                         end
                         
-                        [x_new, y_new, phi_new] = R.robot.getPosition(pixelPosition, camerasClass, cameras);
+                        [x_new, y_new, phi_new] = R.robot.getPosition(robotPosition, camerasClass, cameras);
                         if (x_new ~= -999999)
                             x = x_new;
                             y = y_new;
@@ -117,13 +117,13 @@ classdef RobotController
                     count = 1;
                     while (positionError > 5 || angularError > 0.03 || velocityMagnitude > 10 || Vphi > 0.1 || x == -999999)
                         if(x == -999999)
-                            pixelPosition = camerasClass.getRealPixelPosition([0 ; 0 ; 220]);
+                            robotPosition = [0 0 0];
                         else
-                            pixelPosition = camerasClass.getRealPixelPosition([x ; y ; 220]);
+                            robotPosition = [x y phi];
                         end
                         
                         tic;
-                        [x_new, y_new, phi_new] = R.robot.getPosition(pixelPosition, camerasClass, cameras);
+                        [x_new, y_new, phi_new] = R.robot.getPosition(robotPosition, camerasClass, cameras);
                         t = toc;
                         if (x_new ~= -999999)
                             x = x_new;

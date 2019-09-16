@@ -12,11 +12,13 @@ classdef Storage
         end
         
         function cameraParameters = getCameraParameters()
-            cameraParameters = textread('storage/camera_calibration.dat');
+            parameters(1, :) = textread('storage/camera_calibration_1.dat');
+            parameters(2, :) = textread('storage/camera_calibration_2.dat');
+            cameraParameters = parameters;
         end
         
         function inputCamerasCalibration = getInputCamerasCalibration()
-            inputCamerasCalibration = textread('storage/input_cameras_calibration.dat');
+            inputCamerasCalibration = textread('storage/input_cameras_calibration_1.dat');
         end
         
         function inputTopographicMapGeneration = getInputTopographicMapGeneration()

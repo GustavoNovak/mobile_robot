@@ -10,7 +10,7 @@ classdef Robot
     
     methods        
         function R = Robot(diameter, toolZone, sensorsPosition, maxLinearVelocity, maxAngularVelocity)
-%             R.connection = tcpclient('127.0.0.1', 444);
+            R.connection = tcpclient('127.0.0.1', 444);
             R.diameter = diameter;
             R.toolZone = R.generateToolZone(toolZone);
             R.sensorsPosition = sensorsPosition;
@@ -22,20 +22,21 @@ classdef Robot
             vx = strcat('VX', num2str(V(1)));
             vy = strcat('VY', num2str(V(2)));
             phi = strcat('PHI', num2str(V(3)));
-%             data = uint8(strcat(vx, vy, phi));
-%             write(R.connection, data);
+            data = uint8(strcat(vx, vy, phi));
+            write(R.connection, data);
         end
         
-        function [x, y, phi] = getPosition(R, pixelPosition, camerasClass, cameras)
-            [x, y, phi] = camerasClass.getRobotPosition(pixelPosition, cameras);
+        function [x, y, phi] = getPosition(R, robotPosition, camerasClass, cameras)
+            tic;
+            [x, y, phi] = camerasClass.getRobotPosition(robotPosition, cameras);
             x = x + 75*cos(phi);
             y = y + 75*sin(phi);
-            pixelPosition = camerasClass.getRealPixelPosition([x ; y ; 0]);
             if (x > -9000 && y > -9000)
-                plot(pixelPosition(1), pixelPosition(2), 'o'); 
+                plot(x, y, 'o'); 
             else
                 plot(0, 0, 'o'); 
-            end 
+            end
+            t = toc
         end
         
         function mesh = generateToolZone(R, toolZone)

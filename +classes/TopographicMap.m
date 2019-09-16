@@ -7,18 +7,17 @@ classdef TopographicMap
     
     methods
         function T = TopographicMap(robot)
-            T.map = services.Storage.getTopographicMap;
-            T.realMap = services.Storage.getRealTopographicMap;
+            T.map = services.Storage.getTopographicMap();
+            T.realMap = services.Storage.getRealTopographicMap();
             T.robot = robot;
         end
         
-        function response = isFree(T, robotPosition, camerasClass)
-            pixelPosition = camerasClass.getRealPixelPosition([robotPosition(1) ; robotPosition(2) ; 0]);
-            pixelPosition = [floor(pixelPosition(1)) floor(pixelPosition(2))]; 
+        function response = isFree(T, robotPosition)
+            robotPosition = [floor(robotPosition(1)) floor(robotPosition(2)) robotPosition(3)]; 
             response = false;
             mapSize = size(T.map);
-            if ((pixelPosition(1) > 1 && pixelPosition(2) > 1) && (pixelPosition(2) <= mapSize(1) && pixelPosition(1) <= mapSize(2)))
-                if (T.map(pixelPosition(2), pixelPosition(1)) == 1)
+            if ((robotPosition(1) > -mapSize(2)/2 && robotPosition(2) > -mapSize(1)/2) && (robotPosition(2) < mapSize(1)/2 && robotPosition(1) < mapSize(2)/2))
+                if (T.map(robotPosition(2) + mapSize(1)/2, robotPosition(1) + mapSize(2)/2) == 1)
                     response = true;
                 end
             end
@@ -29,10 +28,9 @@ classdef TopographicMap
                 if(lengthToolZone > 0)
                     for i = 1:lengthToolZone
                         point = [robotPosition(1) robotPosition(2)] + [cos(robotPosition(3) + T.robot.toolZone(i,1))*T.robot.toolZone(i,2) sin(robotPosition(3) + T.robot.toolZone(i,1))*T.robot.toolZone(i,2)];
-                        pixelPosition = camerasClass.getRealPixelPosition([point(1) ; point(2) ; 0]);
-                        pixelPosition = [floor(pixelPosition(1)) floor(pixelPosition(2))];  
-                        if ((pixelPosition(1) > 1 && pixelPosition(2) > 1) && (pixelPosition(2) <= mapSize(1) && pixelPosition(1) <= mapSize(2)))
-                            if (T.realMap(pixelPosition(2), pixelPosition(1)) == 0)
+                        point = [floor(point(1)) floor(point(2))];  
+                        if ((point(1) > -mapSize(2)/2 && point(2) > -mapSize(1)/2) && (point(2) < mapSize(1)/2 && point(1) < mapSize(2)/2))
+                            if (T.realMap(point(2)  + mapSize(1)/2, point(1)  + mapSize(2)/2) == 0)
                                 response = false;
                                 break;
                             end

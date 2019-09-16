@@ -69,7 +69,7 @@ classdef Images
             imshow(img);
         end
         
-        function [xPixel, yPixel] = getCirclePositon(image, color, pixelPosition)
+        function [count, xPixel, yPixel] = getCirclePositon(image, color, pixelPosition)
             if (strcmp(color, 'blue')) 
                 xPixel = 0;
                 yPixel = 0;
@@ -91,10 +91,8 @@ classdef Images
                 for j=(pixelPosition(1)-100):(pixelPosition(1)+100)
                     if((i >= 1 && i <= imageSize(1)) && (j >= 1 && j <= imageSize(2)))
                         if (strcmp(color, 'blue'))
-                            indicator1 = imageValues(i,j,3)/imageValues(i,j,1);
-                            indicator2 = imageValues(i,j,3)/imageValues(i,j,2);
-                            indicator3 = imageValues(i,j,3);
-                            if (indicator1 > 1.5 && indicator2 > 1.5 && indicator3 > (80/255)) 
+                            indicator = imageValues(i,j,3) - ((imageValues(i,j,1) + imageValues(i,j,2))/2);
+                            if (indicator > 0.15) 
                                 count = count + 1;
                                 points(count, :) = [i j];
     %                             for k1 = i:(i+15)
@@ -109,9 +107,8 @@ classdef Images
     %                             image(i,j,3) = 255; 
                             end
                         elseif (strcmp(color, 'red'))
-                            indicator1 = imageValues(i,j,1)/imageValues(i,j,2);
-                            indicator2 = imageValues(i,j,1)/imageValues(i,j,3);
-                            if (imageValues(i,j,1) > (120/255) && indicator1 > 2 && indicator2 > 2)
+                            indicator = imageValues(i,j,1) - ((imageValues(i,j,2) + imageValues(i,j,3))/2.2);
+                            if (indicator > 0.35)
                                 count = count + 1;
                                 points(count, :) = [i j];
     %                             for k1 = i:(i+15)
@@ -155,7 +152,7 @@ classdef Images
                         elseif (strcmp(color, 'red'))
                             indicator1 = imageValues(i,j,1)/imageValues(i,j,2);
                             indicator2 = imageValues(i,j,1)/imageValues(i,j,3);
-                            if (imageValues(i,j,1) > (120/255) && indicator1 > 2 && indicator2 > 2)
+                            if (imageValues(i,j,1) > (120/255) && indicator1 > 1.5 && indicator2 > 1.5)
                                 count = count + 1;
                                 points(count, :) = [i j];
     %                             for k1 = i:(i+15)

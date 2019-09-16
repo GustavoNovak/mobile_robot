@@ -16,15 +16,16 @@ classdef Path
             % Transform measurement point in robot positions and delete not reachable points
             measurementPoints = P.measurement.getMeasurementPoints();
             disp('Measurement Points: ');
-            disp(measurementPoints);            
+            disp(measurementPoints);  
+            points = [];
             count = 0;
             i = 1;
             while i <= length(measurementPoints)
                 theta = 0;
-                while theta <= pi  
+                while theta <= pi
                     robotPosition = services.Math.getRobotPosition(measurementPoints(i, :), -theta, P.robot);
           
-                    if (P.topographicMap.isFree(robotPosition, camerasClass))
+                    if (P.topographicMap.isFree(robotPosition))
                         count = count + 1;
                         points(count, :) = robotPosition;
                         break;
@@ -32,7 +33,7 @@ classdef Path
                     
                     robotPosition = services.Math.getRobotPosition(measurementPoints(i, :), theta, P.robot);
           
-                    if (P.topographicMap.isFree(robotPosition, camerasClass))
+                    if (P.topographicMap.isFree(robotPosition))
                         count = count + 1;
                         points(count, :) = robotPosition;
                         break;
@@ -82,14 +83,15 @@ classdef Path
             disp('Generated Path');
             sizePath = size(path);
             for i = 1:(sizePath(1) - 1)
-                startPixelPosition = camerasClass.getRealPixelPosition([path(i, 1) ; path(i, 2) ; 0]);
-                endPixelPosition = camerasClass.getRealPixelPosition([path(i+1, 1) ; path(i+1, 2) ; 0]);
-                plot([startPixelPosition(1) endPixelPosition(1)], [startPixelPosition(2) endPixelPosition(2)], '*-');
+                plot([path(i, 1) path(i+1, 1)], [path(i, 2) path(i+1, 2)], '*-');
             end
             
             for i = 1:lengthPoints
-                pixelPosition = camerasClass.getRealPixelPosition([points(i, 1) ; points(i, 2) ; 0]);
-                plot(pixelPosition(1), pixelPosition(2), 'o');
+                plot(points(i, 1), points(i, 2), 'o');
+            end
+            
+            for i = 1:length(measurementPoints)
+                plot(measurementPoints(i, 1), measurementPoints(i, 2), 's');
             end
         end
         
