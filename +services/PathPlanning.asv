@@ -60,7 +60,7 @@ classdef PathPlanning
                     end
                 end
 
-                k = k + 1
+                k = k + 1;
             end
             
             if (solutionFound == true)

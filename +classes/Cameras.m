@@ -28,8 +28,8 @@ classdef Cameras
 %                 imshow(img);
 %                 impixelinfo;
 %                 hold on;
-                [countRed, xRed, yRed] = services.Images.getCirclePositon(img, 'red', pixelPosition);
-                [countBlue, xBlue, yBlue] = services.Images.getCirclePositon(img, 'blue', pixelPosition);
+                [countRed, xRed, yRed] = services.Images.getCirclePositon(img, 'red', pixelPosition, k1);
+                [countBlue, xBlue, yBlue] = services.Images.getCirclePositon(img, 'blue', pixelPosition, k1);
                 
                 if (xRed ~= -999999 && xBlue ~= -999999)
                     verificationValue = countRed/countBlue;
@@ -63,6 +63,7 @@ classdef Cameras
         function parameters = calibrate(C, focusLength, thetaMax, chamberSize, cameraNumber, imageSize)
             % Inform the calibration points here
 %             calibrationPoints = [-1390 -1450 0 ; 0 -1450 0 ; 1390 -1450 0 ; -1390 0 0 ; 0 0 0 ; 1390 0 0 ; -1390 1450 0 ; 0 1450 0 ; 1390 1450 0 ];
+            [calibrationPoints, pixelValuesCalibrationPoints] = services.Images.getCaibrationPoints(cameraNumber, cameras, chamberSize);
             calibrationPoints = [1390 0 0 ; 0 -1450 0 ; 0 0 0 ; 0 1450 0 ; -1390 -1450 0 ; -1390 1450 0 ];
             numberPoints = size(calibrationPoints);
             numberPoints = numberPoints(1);

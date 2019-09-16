@@ -66,15 +66,17 @@ classdef Path
             if (lengthPoints > 1)
                 for j = 1: (lengthPoints-1)
                     newPath = services.PathPlanning.generatePath(points(j, :), points(j+1, :), P.topographicMap, P.measurement, camerasClass);
-                    lengthNewPath = size(newPath);
-                    lengthNewPath = lengthNewPath(1);                    
-                    for i = 1: lengthNewPath
-                        if (i > 1)
-                            count = count + 1;
-                            if (i < lengthNewPath)
-                                path(count, :) = [newPath(i, 1) newPath(i, 2) newPath(i, 3) 0]; 
-                            else
-                                path(count, :) = [newPath(i, 1) newPath(i, 2) newPath(i, 3) 1]; 
+                    if(newPath ~= 0)
+                        lengthNewPath = size(newPath);
+                        lengthNewPath = lengthNewPath(1);                    
+                        for i = 1: lengthNewPath
+                            if (i > 1)
+                                count = count + 1;
+                                if (i < lengthNewPath)
+                                    path(count, :) = [newPath(i, 1) newPath(i, 2) newPath(i, 3) 0]; 
+                                else
+                                    path(count, :) = [newPath(i, 1) newPath(i, 2) newPath(i, 3) 1]; 
+                                end
                             end
                         end
                     end

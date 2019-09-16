@@ -71,16 +71,24 @@ classdef Index
         end
         
         function generatePath(cameras)
+            system('start /min interface_cpp.exe');
             robot = classes.Robot(300, [430 40 0], [430 0], 90, 0.15);    
-            camerasClass = classes.Cameras();
-            measurement = classes.Measurement('mesh', [800 880], [2400 2800]);
-            topographicMap = classes.TopographicMap(robot);
-            imagesc([-1390 1390], [-1450 1450], topographicMap.map);
-            hold on;
-            path = classes.Path(topographicMap, measurement, robot);
-            [x, y, phi] = robot.getPosition([0 0], camerasClass, cameras);
-            points = path.generate([x y phi], camerasClass);
-            services.Storage.storePath(points);
+            try
+                camerasClass = classes.Cameras();
+                measurement = classes.Measurement('mesh', [800 880], [2400 2800]);
+                topographicMap = classes.TopographicMap(robot);
+                imagesc([-1390 1390], [-1450 1450], topographicMap.map);
+                hold on;
+                path = classes.Path(topographicMap, measurement, robot);
+                [x, y, phi] = robot.getPosition([0 0], camerasClass, cameras);
+                points = path.generate([x y phi], camerasClass);
+                services.Storage.storePath(points); 
+            catch e 
+                close all;
+                msgbox('Before start measurement you need to generate a path');
+                system('TASKKILL -f -im "interface_cpp.exe"');
+                return;
+            end
         end
         
         function startMeasurement(cameras) 

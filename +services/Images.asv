@@ -321,8 +321,8 @@ classdef Images
             solutionFound = false;
             for i = 4:8
                 P  = houghpeaks(H,i,'threshold',ceil(0.3*max(H(:))));
-                x = T(P(:,2));
-                y = R(P(:,1));
+                x = T(P(:,2))
+                y = R(P(:,1))
                 points = [];
                 count = 0;
                 for j = 1:i
@@ -345,15 +345,19 @@ classdef Images
                         points(count, :) = [x(j) y(j)];
                     end
                 end
-                
-                if(count == 4)
-                    solutionFound = true;
-                    break;
-                end
             end
-           
-            plot(points(:, 1), points(:, 2), 's', 'color', 'white');
+            if(count == 4)
+                solutionFound = true;
+                break;
+            end
         end
+        
+            for i = 1:4
+                x(i) = points(i, 1);
+                y(i) = points(i, 2);
+            end
+            
+            plot(x, y, 's', 'color', 'white');
     end
 end
 
