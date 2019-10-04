@@ -12,178 +12,182 @@ classdef RobotController
         
         function moveInPath(R, camerasClass, cameras)
             Kp = 1.5;
-            Ki = 0.0;
             Kp_phi = 1.3;
-            Ki_phi = 0.0;
-            for i=1:length(R.path)
+            
+            timer = tic;
+            [x, y, phi] = R.robot.getPosition([0 0], camerasClass, cameras, [0 0 0], timer, 0);
+            
+            if(x < -10000)
+                msgbox('Move robot to a position were cameras can mesure his position!');
+                return;
+            end
+            
+            pathSize = size(R.path);
+            pathSize = pathSize(1);
+            
+            for i=1:pathSize
                 R.path(i,:)
                 if (R.path(i,4) == 0) 
                     % Control just in linear velocity
-                    errorX = 0;
-                    errorY = 0;
-                    errorPhi = 0;
-                    integralErrorX = 0;
-                    integralErrorY = 0;
-                    integralErrorPhi = 0;
                     positionError = 100;
                     angularError = 0;
                     velocityMagnitude = 0;
-                    Vphi = 0.0;
-                    tic;
-                    x = -999999;
-                    y = -999999;
-                    phi = -999999;
+                    Vx_real = 0;
+                    Vy_real = 0;
+                    Vx = 0;
+                    Vy = 0;
+                    Vphi = 0;
+                    timer = tic;
+                    
                     count = 1;
-                    while (positionError > 10 || angularError > 0.05 || velocityMagnitude > 50 || x == -999999)
-                        if(x == -999999)
-                            robotPosition = [0 0 0];
+                    while (positionError > 10 || angularError > 0.05 || velocityMagnitude > 50)
+                        [x_new, y_new, phi_new] = R.robot.getPosition([x y phi], camerasClass, cameras, [Vx Vy Vphi], timer, 0);
+                        toc(timer)
+                        deltaT = toc(timer);
+                        if (x_new > -10000)
+                            x = x + deltaT*Vx_real + 0.2*(x_new -(x + deltaT*Vx_real));
+                            y = y + deltaT*Vy_real + 0.2*(y_new -(y + deltaT*Vy_real));
+                            phi = phi + deltaT*Vphi + 0.2*(phi_new -(phi + deltaT*Vphi));
                         else
-                            robotPosition = [x y phi];
+                            disp('just Velocity');
+                            x = x + deltaT*Vx_real;
+                            y = y + deltaT*Vy_real;
+                            phi = phi + deltaT*Vphi;
+                        end 
+                        
+                        if (x > -10000 && y > -10000)
+                            plot(x, y, 'o');
+                        else
+                            plot(0, 0, 'o'); 
                         end
                         
-                        [x_new, y_new, phi_new] = R.robot.getPosition(robotPosition, camerasClass, cameras);
-                        if (x_new ~= -999999)
-                            x = x_new;
-                            y = y_new;
-                            phi = phi_new;
+                        positionError = norm([(R.path(i, 1) - x) (R.path(i, 2) - y)]);
+                        angularError = R.path(i, 3) - phi;
+
+                        direction = [(R.path(i, 1) - x) (R.path(i, 2) - y) (R.path(i, 3) - phi)];
+
+                        error = norm(direction);
+                        direction = direction/error;
+
+                        Vx_real = Kp*error*direction(1);
+                        Vy_real = Kp*error*direction(2);
+
+                        Vx = cos(phi)*Vx_real + sin(phi)*Vy_real;
+                        Vy = -sin(phi)*Vx_real + cos(phi)*Vy_real;
+
+                        velocityMagnitude = norm([Vx Vy]);
+
+                        Vphi = Kp_phi*error*direction(3);
+                        if (velocityMagnitude > R.robot.maxLinearVelocity)
+                            Vx_real = Vx_real * (R.robot.maxLinearVelocity/velocityMagnitude);
+                            Vy_real = Vy_real * (R.robot.maxLinearVelocity/velocityMagnitude);
+                            
+                            Vx = Vx * (R.robot.maxLinearVelocity/velocityMagnitude);
+                            Vy = Vy * (R.robot.maxLinearVelocity/velocityMagnitude);
+                            Vphi = Vphi * (R.robot.maxLinearVelocity/velocityMagnitude);
                         end
-                        if (x ~= -999999)
-                            t = toc
-%                             oldErrorX = errorX;
-%                             oldErrorY = errorY;
+                        if (abs(Vphi) > R.robot.maxAngularVelocity)
+                            Vx_real = Vx_real * (R.robot.maxAngularVelocity/abs(Vphi));
+                            Vy_real = Vy_real * (R.robot.maxAngularVelocity/abs(Vphi));
                             
-                            oldErrorPhi = errorPhi;
-%                             errorX = R.path(i, 1) - x; 
-%                             errorY = R.path(i, 2) - y;
-                            errorPhi = R.path(i, 3) - phi;
-%                             integralErrorX = integralErrorX + ((oldErrorX + errorX)/2)*t;
-%                             integralErrorY = integralErrorY + ((oldErrorY + errorY)/2)*t;
-%                             integralErrorPhi = integralErrorPhi + ((oldErrorPhi + errorPhi)/2)*t;
-                            
-                            direction = [(R.path(i, 1) - x) (R.path(i, 2) - y) errorPhi];
-                            error = norm(direction);
-                            direction = direction/error;
-                            Vx_real = Kp*error*direction(1);
-                            Vy_real = Kp*error*direction(2);
-                            Vx = cos(phi)*Vx_real + sin(phi)*Vy_real;
-                            Vy = -sin(phi)*Vx_real + cos(phi)*Vy_real;
-                            velocityMagnitude = norm([Vx Vy]);
+                            Vx = Vx * (R.robot.maxAngularVelocity/abs(Vphi));
+                            Vy = Vy * (R.robot.maxAngularVelocity/abs(Vphi));
+                            Vphi = Vphi * (R.robot.maxAngularVelocity/abs(Vphi));
+                        end
 
-%                             Vx_real = Kp*errorX + Ki*integralErrorX;
-%                             Vy_real = Kp*errorY + Ki*integralErrorY;
-     
-                            Vphi = Kp_phi*error*direction(3);
-                            if (velocityMagnitude > R.robot.maxLinearVelocity)
-                                Vx = Vx * (R.robot.maxLinearVelocity/velocityMagnitude);
-                                Vy = Vy * (R.robot.maxLinearVelocity/velocityMagnitude);
-                                Vphi = Vphi * (R.robot.maxLinearVelocity/velocityMagnitude);
-                            end
-                            if (abs(Vphi) > R.robot.maxAngularVelocity)
-                                Vx = Vx * (R.robot.maxAngularVelocity/abs(Vphi));
-                                Vy = Vy * (R.robot.maxAngularVelocity/abs(Vphi));
-                                Vphi = Vphi * (R.robot.maxAngularVelocity/abs(Vphi));
-                            end
-                            positionError = norm([(R.path(i, 1) - x) (R.path(i, 2) - y)]);
-                            angularError = errorPhi;
+                        Vx = Vx/1000;
+                        Vy = Vy/1000;
 
-                            Vx = Vx/1000;
-                            Vy = Vy/1000;
-
-                            R.robot = R.robot.setVelocity([Vx Vy Vphi]);
-                            tic;
-                            count = count + 1;
-                            if (count > 1000)
-                                break
-                            end
+                        R.robot.setVelocity([Vx Vy Vphi]);
+                        timer = tic;
+                        
+                        count = count + 1;
+                        if (count > 1000)
+                            break
                         end
                     end
+                    
+                    R.robot.setVelocity([0 0 0]);
                     disp('Position Achived');
                 else
                     % Control in linear and angular velocity
-                    errorX = 0;
-                    errorY = 0;
-                    errorPhi = 0;
-                    integralErrorX = 0;
-                    integralErrorY = 0;
-                    integralErrorPhi = 0;
-                    positionError = 0;
+                    positionError = 100;
                     angularError = 0;
                     velocityMagnitude = 0;
-                    Vphi = 0.0;
-                    tic;
-                    x = -999999;
-                    y = -999999;
-                    phi = -999999;
+                    Vx_real = 0;
+                    Vy_real = 0;
+                    Vx = 0;
+                    Vy = 0;
+                    Vphi = 0;
+                    timer = tic;
+                    
                     count = 1;
-                    while (positionError > 5 || angularError > 0.03 || velocityMagnitude > 10 || Vphi > 0.1 || x == -999999)
-                        if(x == -999999)
-                            robotPosition = [0 0 0];
+                    while (positionError > 10 || angularError > 0.05 || velocityMagnitude > 50 || Vphi > 0.1)
+                        [x_new, y_new, phi_new] = R.robot.getPosition([x y phi], camerasClass, cameras, [Vx Vy Vphi], timer, 0);
+                        toc(timer)
+                        deltaT = toc(timer);
+                        if (x_new > -10000)                            
+                            x = x + deltaT*Vx_real + 0.5*(x_new -(x + deltaT*Vx_real));
+                            y = y + deltaT*Vy_real + 0.5*(y_new -(y + deltaT*Vy_real));
+                            phi = phi + deltaT*Vphi + 0.5*(phi_new -(phi + deltaT*Vphi));
                         else
-                            robotPosition = [x y phi];
+                            disp('just Velocity');
+                            x = x + deltaT*Vx_real;
+                            y = y + deltaT*Vy_real;
+                            phi = phi + deltaT*Vphi;
                         end
                         
-                        tic;
-                        [x_new, y_new, phi_new] = R.robot.getPosition(robotPosition, camerasClass, cameras);
-                        t = toc;
-                        if (x_new ~= -999999)
-                            x = x_new;
-                            y = y_new;
-                            phi = phi_new;
+                        if (x > -10000 || y > -10000)
+                            plot(x, y, 'o');
+                        else
+                            plot(0, 0, 'o'); 
                         end
-                        if (x ~= -999999)
-                            t = toc;
-%                             oldErrorX = errorX;
-%                             oldErrorY = errorY;
+
+                        positionError = norm([(R.path(i, 1) - x) (R.path(i, 2) - y)]);
+                        angularError = R.path(i, 3) - phi;
+
+                        direction = [(R.path(i, 1) - x) (R.path(i, 2) - y) (R.path(i, 3) - phi)];
+                        error = norm(direction);
+                        direction = direction/error;
+                        Vx_real = Kp*error*direction(1);
+                        Vy_real = Kp*error*direction(2);
+                        Vx = cos(phi)*Vx_real + sin(phi)*Vy_real;
+                        Vy = -sin(phi)*Vx_real + cos(phi)*Vy_real;
+                        velocityMagnitude = norm([Vx Vy]);
+
+                        Vphi = Kp_phi*error*direction(3);
+                        if (velocityMagnitude > R.robot.maxLinearVelocity)
+                            Vx_real = Vx_real * (R.robot.maxLinearVelocity/velocityMagnitude);
+                            Vy_real = Vy_real * (R.robot.maxLinearVelocity/velocityMagnitude);
                             
-                            oldErrorPhi = errorPhi;
-%                             errorX = R.path(i, 1) - x; 
-%                             errorY = R.path(i, 2) - y;
-                            errorPhi = R.path(i, 3) - phi;
-%                             integralErrorX = integralErrorX + ((oldErrorX + errorX)/2)*t;
-%                             integralErrorY = integralErrorY + ((oldErrorY + errorY)/2)*t;
-%                             integralErrorPhi = integralErrorPhi + ((oldErrorPhi + errorPhi)/2)*t;
+                            Vx = Vx * (R.robot.maxLinearVelocity/velocityMagnitude);
+                            Vy = Vy * (R.robot.maxLinearVelocity/velocityMagnitude);
+                            Vphi = Vphi * (R.robot.maxLinearVelocity/velocityMagnitude);
+                        end
+                        if (abs(Vphi) > R.robot.maxAngularVelocity)
+                            Vx_real = Vx_real * (R.robot.maxAngularVelocity/abs(Vphi));
+                            Vy_real = Vy_real * (R.robot.maxAngularVelocity/abs(Vphi));
                             
-                            direction = [(R.path(i, 1) - x) (R.path(i, 2) - y) errorPhi];
-                            error = norm(direction);
-                            direction = direction/error;
-                            Vx_real = Kp*error*direction(1);
-                            Vy_real = Kp*error*direction(2);
-                            Vx = cos(phi)*Vx_real + sin(phi)*Vy_real;
-                            Vy = -sin(phi)*Vx_real + cos(phi)*Vy_real;
-                            velocityMagnitude = norm([Vx Vy]);
+                            Vx = Vx * (R.robot.maxAngularVelocity/abs(Vphi));
+                            Vy = Vy * (R.robot.maxAngularVelocity/abs(Vphi));
+                            Vphi = Vphi * (R.robot.maxAngularVelocity/abs(Vphi));
+                        end
 
-%                             Vx_real = Kp*errorX + Ki*integralErrorX;
-%                             Vy_real = Kp*errorY + Ki*integralErrorY;
-     
-                            Vphi = Kp_phi*error*direction(3);
-                            if (velocityMagnitude > R.robot.maxLinearVelocity)
-                                Vx = Vx * (R.robot.maxLinearVelocity/velocityMagnitude);
-                                Vy = Vy * (R.robot.maxLinearVelocity/velocityMagnitude);
-                                Vphi = Vphi * (R.robot.maxLinearVelocity/velocityMagnitude);
-                            end
-                            if (abs(Vphi) > R.robot.maxAngularVelocity)
-                                Vx = Vx * (R.robot.maxAngularVelocity/abs(Vphi));
-                                Vy = Vy * (R.robot.maxAngularVelocity/abs(Vphi));
-                                Vphi = Vphi * (R.robot.maxAngularVelocity/abs(Vphi));
-                            end
-                            positionError = norm([(R.path(i, 1) - x) (R.path(i, 2) - y)]);
-                            angularError = errorPhi;
+                        Vx = Vx/1000;
+                        Vy = Vy/1000;
 
-                            Vx = Vx/1000;
-                            Vy = Vy/1000;
-
-                            R.robot = R.robot.setVelocity([Vx Vy Vphi]);
-                            tic;
-                            count = count + 1;
-                            if (count > 1000)
-                                break
-                            end
+                        R.robot.setVelocity([Vx Vy Vphi]);
+                        timer = tic;
+                        
+                        count = count + 1;
+                        if (count > 1000)
+                            break
                         end
                     end
-                    t = toc;
-                    R.robot = R.robot.setVelocity([0 0 0]);
+                    
+                    R.robot.setVelocity([0 0 0]);
                     disp('Measuring...');
-                    pause(10);
+                    pause(5);
                     disp('Measure realized');
                 end
             end

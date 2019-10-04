@@ -69,7 +69,7 @@ classdef Images
             imshow(img);
         end
         
-        function [count, xPixel, yPixel] = getCirclePositon(image, color, pixelPosition, cameraNumber)
+        function [count, xPixel, yPixel, countSettedVelocity] = getCirclePositon(image, color, pixelPosition, cameraNumber, velocity, timer, countSettedVelocity, robot)
             if (strcmp(color, 'blue')) 
                 xPixel = 0;
                 yPixel = 0;
@@ -87,19 +87,24 @@ classdef Images
             points = [];
             count = 0;
             if(cameraNumber == 1)
-                blueIndicator = 0.11;
-                redIndicator = 0.40;     
+                greenIndicator = 0.15;
+                redIndicator = 0.15;     
             else
-                blueIndicator = 0.15;
-                redIndicator = 0.50;                
+                greenIndicator = 0.15;
+                redIndicator = 0.25;                
             end
             
             for i=(pixelPosition(2)-100):(pixelPosition(2)+100)
+                t = toc(timer);
+                if((t - countSettedVelocity*0.2) > 0)
+                    countSettedVelocity = countSettedVelocity + 1;
+                    robot.setVelocity(velocity);
+                end
                 for j=(pixelPosition(1)-100):(pixelPosition(1)+100)
                     if((i >= 1 && i <= imageSize(1)) && (j >= 1 && j <= imageSize(2)))
-                        if (strcmp(color, 'blue'))
-                            indicator = imageValues(i,j,3) - ((imageValues(i,j,1) + imageValues(i,j,2))/2);
-                            if (indicator > blueIndicator) 
+                        if (strcmp(color, 'green'))
+                            indicator = imageValues(i,j,2) - ((imageValues(i,j,1) + imageValues(i,j,3))/2);
+                            if (indicator > greenIndicator) 
                                 count = count + 1;
                                 points(count, :) = [i j];
     %                             for k1 = i:(i+15)
@@ -109,14 +114,14 @@ classdef Images
     %                                     image(k1,k2,3) = 255; 
     %                                 end
     %                             end
-    %                             image(i,j,1) = 255;
-    %                             image(i,j,2) = 255;
-    %                             image(i,j,3) = 255; 
+%                                 image(i,j,1) = 255;
+%                                 image(i,j,2) = 255;
+%                                 image(i,j,3) = 255; 
                             end
                         elseif (strcmp(color, 'red'))
                             if(cameraNumber == 1)
-                                indicator = (imageValues(i,j,1)/(imageValues(i,j,2) + imageValues(i,j,3)))*(imageValues(i,j,1) - ((imageValues(i,j,2) + imageValues(i,j,3))/2.2));
-                                if (indicator > redIndicator && imageValues(i,j,1) > 0.2)
+                                indicator = imageValues(i,j,1) - ((imageValues(i,j,2) + imageValues(i,j,3))/2.2);
+                                if (indicator > redIndicator)
                                     count = count + 1;
                                     points(count, :) = [i j];
         %                             for k1 = i:(i+15)
@@ -125,10 +130,10 @@ classdef Images
         %                                     image(k1,k2,2) = 255;
         %                                     image(k1,k2,3) = 255; 
         %                                 end
-        %                             end
-        %                             image(i,j,1) = 255;
-        %                             image(i,j,2) = 255;
-        %                             image(i,j,3) = 255; 
+%         %                             end
+%                                     image(i,j,1) = 255;
+%                                     image(i,j,2) = 255;
+%                                     image(i,j,3) = 255; 
                                 end                               
                             else 
                                 indicator = imageValues(i,j,1) - ((imageValues(i,j,2) + imageValues(i,j,3))/2.2);
@@ -142,9 +147,9 @@ classdef Images
         %                                     image(k1,k2,3) = 255; 
         %                                 end
         %                             end
-        %                             image(i,j,1) = 255;
-        %                             image(i,j,2) = 255;
-        %                             image(i,j,3) = 255; 
+%                                     image(i,j,1) = 255;
+%                                     image(i,j,2) = 255;
+%                                     image(i,j,3) = 255; 
                                 end   
                             end
                         end 
@@ -152,64 +157,69 @@ classdef Images
                 end
             end
             
-            if(count == 0)
-                disp('não achou de primeira');
-                for i=1:imageSize(1)
-                    for j=1:imageSize(2)
-                                                if (strcmp(color, 'blue'))
-                            indicator = imageValues(i,j,3) - ((imageValues(i,j,1) + imageValues(i,j,2))/2);
-                            if (indicator > blueIndicator) 
-                                count = count + 1;
-                                points(count, :) = [i j];
-    %                             for k1 = i:(i+15)
-    %                                 for k2 = j:(j+15)
-    %                                     image(k1,k2,1) = 255;
-    %                                     image(k1,k2,2) = 255;
-    %                                     image(k1,k2,3) = 255; 
-    %                                 end
-    %                             end
-    %                             image(i,j,1) = 255;
-    %                             image(i,j,2) = 255;
-    %                             image(i,j,3) = 255; 
-                            end
-                        elseif (strcmp(color, 'red'))
-                            if(cameraNumber == 1)
-                                indicator = (imageValues(i,j,1)/(imageValues(i,j,2) + imageValues(i,j,3)))*(imageValues(i,j,1) - ((imageValues(i,j,2) + imageValues(i,j,3))/2.2));
-                                if (indicator > redIndicator && imageValues(i,j,1) > 0.2)
-                                    count = count + 1;
-                                    points(count, :) = [i j];
-        %                             for k1 = i:(i+15)
-        %                                 for k2 = j:(j+15)
-        %                                     image(k1,k2,1) = 255;
-        %                                     image(k1,k2,2) = 255;
-        %                                     image(k1,k2,3) = 255; 
-        %                                 end
-        %                             end
-        %                             image(i,j,1) = 255;
-        %                             image(i,j,2) = 255;
-        %                             image(i,j,3) = 255; 
-                                end                               
-                            else 
-                                indicator = imageValues(i,j,1) - ((imageValues(i,j,2) + imageValues(i,j,3))/2.2);
-                                if (indicator > redIndicator)
-                                    count = count + 1;
-                                    points(count, :) = [i j];
-        %                             for k1 = i:(i+15)
-        %                                 for k2 = j:(j+15)
-        %                                     image(k1,k2,1) = 255;
-        %                                     image(k1,k2,2) = 255;
-        %                                     image(k1,k2,3) = 255; 
-        %                                 end
-        %                             end
-        %                             image(i,j,1) = 255;
-        %                             image(i,j,2) = 255;
-        %                             image(i,j,3) = 255; 
-                                end   
-                            end
-                        end 
-                    end
-                end
-            end
+%             if(count == 0)
+% %                 disp('não achou de primeira');
+%                 for i=1:imageSize(1)
+%                     t = toc(timer);
+%                     if((t - countSettedVelocity*0.2) > 0)
+%                         countSettedVelocity = countSettedVelocity + 1;
+%                         robot.setVelocity(velocity);
+%                     end
+%                     for j=1:imageSize(2)
+%                         if (strcmp(color, 'green'))
+%                             indicator = imageValues(i,j,2) - ((imageValues(i,j,1) + imageValues(i,j,3))/2);
+%                             if (indicator > greenIndicator) 
+%                                 count = count + 1;
+%                                 points(count, :) = [i j];
+%     %                             for k1 = i:(i+15)
+%     %                                 for k2 = j:(j+15)
+%     %                                     image(k1,k2,1) = 255;
+%     %                                     image(k1,k2,2) = 255;
+%     %                                     image(k1,k2,3) = 255; 
+%     %                                 end
+%     %                             end
+% %                                 image(i,j,1) = 255;
+% %                                 image(i,j,2) = 255;
+% %                                 image(i,j,3) = 255; 
+%                             end
+%                         elseif (strcmp(color, 'red'))
+%                             if(cameraNumber == 1)
+%                                 indicator = imageValues(i,j,1) - ((imageValues(i,j,2) + imageValues(i,j,3))/2.2);
+%                                 if (indicator > redIndicator)
+%                                     count = count + 1;
+%                                     points(count, :) = [i j];
+%         %                             for k1 = i:(i+15)
+%         %                                 for k2 = j:(j+15)
+%         %                                     image(k1,k2,1) = 255;
+%         %                                     image(k1,k2,2) = 255;
+%         %                                     image(k1,k2,3) = 255; 
+%         %                                 end
+%         %                             end
+% %                                     image(i,j,1) = 255;
+% %                                     image(i,j,2) = 255;
+% %                                     image(i,j,3) = 255; 
+%                                 end                               
+%                             else 
+%                                 indicator = imageValues(i,j,1) - ((imageValues(i,j,2) + imageValues(i,j,3))/2.2);
+%                                 if (indicator > redIndicator)
+%                                     count = count + 1;
+%                                     points(count, :) = [i j];
+%         %                             for k1 = i:(i+15)
+%         %                                 for k2 = j:(j+15)
+%         %                                     image(k1,k2,1) = 255;
+%         %                                     image(k1,k2,2) = 255;
+%         %                                     image(k1,k2,3) = 255; 
+%         %                                 end
+%         %                             end
+% %                                     image(i,j,1) = 255;
+% %                                     image(i,j,2) = 255;
+% %                                     image(i,j,3) = 255; 
+%                                 end   
+%                             end
+%                         end 
+%                     end
+%                 end
+%             end
 
             if (count > 1)
                 sumX = 0;
@@ -287,14 +297,16 @@ classdef Images
 %             end
         end
         
-        function [calibrationPoints, pixelValuesCalibrationPoints] = getCaibrationPoints(cameraNumber, chamberSize)
-            img = imread('img22.png');
+        function [calibrationPoints, pixelValuesCalibrationPoints, imageSize] = getCalibrationPoints(cameraNumber, cameras, chamberSize)
+            img = getsnapshot(cameras(cameraNumber));
             imgSize = size(img);
             figure;
             imshow(img);
             impixelinfo;
             img = im2double(img);
-
+            imageSize = size(img);
+            imageSize = [imageSize(2) imageSize(1)];
+            
             redImage = zeros(imgSize(1), imgSize(2));
             for i = 1:imgSize(1)
                 for j = 1:imgSize(2)
@@ -311,8 +323,13 @@ classdef Images
             imshow(redImage);
             impixelinfo;
             figure;
-            imshow(edge(rgb2gray(redImage), 'Sobel'));
-            [H,T,R] = hough(edge(rgb2gray(redImage), 'Sobel'),'RhoResolution',0.5,'Theta',-90:0.05:89.9);
+            edgeImg = edge(rgb2gray(redImage), 'Sobel');
+%             se90 = strel('line',3,90);
+%             se0 = strel('line',3,0);
+%             edgeImg = imdilate(edgeImg,[se90 se0]);
+%             edgeImg = imfill(edgeImg,'holes');
+            imshow(edgeImg);
+            [H,T,R] = hough(edgeImg, 'RhoResolution', 0.5, 'Theta', -90:0.01:89.9);
             figure;
             imshow(H,[],'XData',T,'YData',R,...
                         'InitialMagnification','fit');
@@ -330,7 +347,7 @@ classdef Images
                         keep = false;
                         for k = 1:count
                             distance = [x(j) 10*y(j)] - [points(k, 1) 10*points(k, 2)];
-                            if(norm(distance) < 100)
+                            if(norm(distance) < 300)
                                 keep = true;
                                 break;
                             end
@@ -351,8 +368,120 @@ classdef Images
                     break;
                 end
             end
-           
-            plot(points(:, 1), points(:, 2), 's', 'color', 'white');
+            
+            countIntersectionPoints = 0;
+            intersectionPoints = [];
+            if(solutionFound)
+                plot(points(:, 1), points(:, 2), 's', 'color', 'white');
+
+                for i = 1:4
+                    angleDistances = [];
+                    count = 0;
+                    for j = 1:4
+                        count = count + 1;
+                        angleDistances(count, :) = [j abs(points(i, 1) - points(j, 1))];
+                    end
+                    
+                    perpendicularLines = [];
+                    count = 0;
+                    for j = 1:4
+                        if(count == 2)
+                            for k = 1:count
+                                if(perpendicularLines(k, 2) < angleDistances(j, 2))
+                                    perpendicularLines(k, :) = angleDistances(j, :);
+                                    break;
+                                end
+                            end
+                        else
+                            count = count + 1;
+                            perpendicularLines(count, :) = angleDistances(j, :);
+                        end
+                    end
+
+                    for j = 1:2
+                        for k = 1:4
+                            if(perpendicularLines(j, 1) == k)
+                                perpendicularLines(j, :) = points(k, :);
+                            end
+                        end
+                    end
+                    
+                    for j = 1:2
+                        theta1 = (pi/180)*points(i, 1);
+                        theta2 = (pi/180)*perpendicularLines(j, 1);
+                        ro1 = points(i, 2);
+                        ro2 = perpendicularLines(j, 2);
+                        
+                        countIntersectionPoints = countIntersectionPoints + 1;
+                        intersectionPoints(countIntersectionPoints, :) = (1/sin(theta2 - theta1))*[(ro1*sin(theta2) - ro2*sin(theta1)) (-ro1*cos(theta2) + ro2*cos(theta1))];
+                    end
+                end
+                
+                count = 0;
+                finalIntersectionPoints = [];
+                for j = 1:8
+                    if(count > 0)
+                        canRegister = true;
+                        for k = 1:count
+                            if(finalIntersectionPoints(k, 1) == intersectionPoints(j, 1) && finalIntersectionPoints(k, 2) == intersectionPoints(j, 2))
+                                canRegister = false;
+                                break;
+                            end
+                        end
+                        
+                        if(canRegister)
+                            count = count + 1;
+                            finalIntersectionPoints(count, :) = intersectionPoints(j, :);                                     
+                        end
+                    else
+                        count = count + 1;
+                        finalIntersectionPoints(count, :) = intersectionPoints(j, :); 
+                    end
+                end
+            else
+                msgbox('One of four lines was not detected in Hough transform');
+            end
+            
+            pixelValuesCalibrationPoints = finalIntersectionPoints;
+       
+            center = [sum(pixelValuesCalibrationPoints(:, 1)/4) sum(pixelValuesCalibrationPoints(:, 2)/4)];
+            
+            count = 0;
+            calibrationPoints = [];
+            for i = 1:4    
+                aux = sign(pixelValuesCalibrationPoints(i, :) - center);
+                
+                if(cameraNumber == 1)
+                    if(aux(1) > 0 && aux(2) > 0) 
+                        count = count + 1;
+                        calibrationPoints(count, :) = 0.5*[chamberSize(1) -chamberSize(2) 0];
+                    elseif(aux(1) < 0 && aux(2) > 0) 
+                        count = count + 1;
+                        calibrationPoints(count, :) = 0.5*[-chamberSize(1) -chamberSize(2) 0];
+                    elseif(aux(1) < 0 && aux(2) < 0) 
+                        count = count + 1;
+                        calibrationPoints(count, :) = 0.5*[-chamberSize(1) chamberSize(2) 0];
+                    elseif(aux(1) > 0 && aux(2) < 0) 
+                        count = count + 1;
+                        calibrationPoints(count, :) = 0.5*[chamberSize(1) chamberSize(2) 0];
+                    end               
+                elseif(cameraNumber == 2)
+                    if(aux(1) > 0 && aux(2) > 0) 
+                        count = count + 1;
+                        calibrationPoints(count, :) = 0.5*[chamberSize(1) chamberSize(2) 0];
+                    elseif(aux(1) < 0 && aux(2) > 0) 
+                        count = count + 1;
+                        calibrationPoints(count, :) = 0.5*[chamberSize(1) -chamberSize(2) 0];
+                    elseif(aux(1) < 0 && aux(2) < 0) 
+                        count = count + 1;
+                        calibrationPoints(count, :) = 0.5*[-chamberSize(1) -chamberSize(2) 0];
+                    elseif(aux(1) > 0 && aux(2) < 0) 
+                        count = count + 1;
+                        calibrationPoints(count, :) = 0.5*[-chamberSize(1) chamberSize(2) 0];
+                    end
+                end
+            end
+            
         end
     end
 end

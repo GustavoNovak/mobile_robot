@@ -66,7 +66,6 @@ classdef Path
             if (lengthPoints > 1)
                 for j = 1: (lengthPoints-1)
                     newPath = services.PathPlanning.generatePath(points(j, :), points(j+1, :), P.topographicMap, P.measurement, camerasClass);
-                    if(newPath ~= 0)
                         lengthNewPath = size(newPath);
                         lengthNewPath = lengthNewPath(1);                    
                         for i = 1: lengthNewPath
@@ -79,7 +78,6 @@ classdef Path
                                 end
                             end
                         end
-                    end
                 end
             end
             disp('Generated Path');

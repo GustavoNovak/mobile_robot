@@ -11,38 +11,36 @@ classdef Cameras
             end
         end
         
-        function [x, y, phi] = getRobotPosition(C, robotPosition, cameras)
+        function [x, y, phi] = getRobotPosition(C, robotPosition, cameras, velocity, timer, countSettedVelocity, robot)
             x = 0;
             y = 0;
             phi = 0;
             
             count = 0;
             for k1 = 1:length(cameras)
-                k1
                 pixelPosition = C.getRealPixelPosition(k1, [robotPosition(1) ; robotPosition(2) ; 220]);
                 pixelPosition(1) = floor(pixelPosition(1));
                 pixelPosition(2) = floor(pixelPosition(2));
                 
                 img = getsnapshot(cameras(k1));
-%                 figure;
-%                 imshow(img);
-%                 impixelinfo;
-%                 hold on;
-                [countRed, xRed, yRed] = services.Images.getCirclePositon(img, 'red', pixelPosition, k1);
-                [countBlue, xBlue, yBlue] = services.Images.getCirclePositon(img, 'blue', pixelPosition, k1);
+
+                [countRed, xRed, yRed, countSettedVelocity] = services.Images.getCirclePositon(img, 'red', pixelPosition, k1, velocity, timer, countSettedVelocity, robot);
+                [countGreen, xGreen, yGreen, countSettedVelocity] = services.Images.getCirclePositon(img, 'green', pixelPosition, k1, velocity, timer, countSettedVelocity, robot);
                 
-                if (xRed ~= -999999 && xBlue ~= -999999)
-                    verificationValue = countRed/countBlue;
-                    if(verificationValue > 0.5 && verificationValue < 2)
-                        realPositionRed = C.getRealPosition(k1, [xRed yRed], 220);
-                        realPositionBlue = C.getRealPosition(k1, [xBlue yBlue], 220);
+                if (xRed > -10000 && xGreen > -10000 && k1 == 1)
+                    verificationValue = countRed/countGreen;
+                    if(verificationValue > 0.2 && verificationValue < 5)
+                        realPositionRed = C.getRealPosition(k1, [xRed yRed], 235);
+                        realPositionGreen = C.getRealPosition(k1, [xGreen yGreen], 235);
 
                         count = count + 1;
-                        x = x + (realPositionRed(1) + realPositionBlue(1))/2;
-                        y = y + (realPositionRed(2) + realPositionBlue(2))/2;
+                        x = x + (realPositionRed(1) + realPositionGreen(1))/2;
+                        y = y + (realPositionRed(2) + realPositionGreen(2))/2;
 
-                        vectorPosition = [(realPositionRed(1) - realPositionBlue(1)) (realPositionRed(2) - realPositionBlue(2))];
-
+                        vectorPosition = [(realPositionRed(1) - realPositionGreen(1)) ; (realPositionRed(2) - realPositionGreen(2))];
+                        vectorPosition = [0 1 ; -1 0] * vectorPosition;
+                        
+                      
                         phi = phi + atan2(vectorPosition(2), vectorPosition(1));
                         break;
                     end
@@ -60,36 +58,32 @@ classdef Cameras
             end
         end
         
-        function parameters = calibrate(C, focusLength, thetaMax, chamberSize, cameraNumber, imageSize)
+        function parameters = calibrate(C, focusLength, thetaMax, chamberSize, cameraNumber, cameras)
             % Inform the calibration points here
-%             calibrationPoints = [-1390 -1450 0 ; 0 -1450 0 ; 1390 -1450 0 ; -1390 0 0 ; 0 0 0 ; 1390 0 0 ; -1390 1450 0 ; 0 1450 0 ; 1390 1450 0 ];
-            [calibrationPoints, pixelValuesCalibrationPoints] = services.Images.getCaibrationPoints(cameraNumber, cameras, chamberSize);
-            calibrationPoints = [1390 0 0 ; 0 -1450 0 ; 0 0 0 ; 0 1450 0 ; -1390 -1450 0 ; -1390 1450 0 ];
+            [calibrationPoints, pixelValuesCalibrationPoints, imageSize] = services.Images.getCalibrationPoints(cameraNumber, cameras, chamberSize);
+            calibrationPoints = [-1390 -1450 0 ; 1390 -1450 0 ; -1390 1450 0 ; 1390 1450 0];
+            if(cameraNumber == 1)
+                pixelValuesCalibrationPoints = [103 547 ; 870 559 ; 255 5 ; 740 19]; 
+            else
+                pixelValuesCalibrationPoints = [117 10 ; -15 460 ; 557 3 ; 694 470]; 
+            end
+
             numberPoints = size(calibrationPoints);
             numberPoints = numberPoints(1);
-%              pixelValuesCalibrationPoints = services.Simulator.calculatePointsInImage([-1000 -1350 0 ; 0 -1350 0 ; 1000 -1350 0 ; 0 1350 0 ; -1000 1350 0 ; 1000 1350 0 ; -900 -1250 200 ; 0 -1250 200 ; 900 -1250 200 ; 0 1250 200 ; -900 1250 100 ; 900 1250 100 ; -800 -1150 100 ; 0 -1150 0 ; 800 -1150 0 ; 0 1150 0 ; -800 1150 0 ; 800 1150 0 ; -700 -1050 0 ; 0 -1050 0 ; 700 -1050 0 ; 0 1050 0 ; -700 1050 0 ; 700 1050 0 ; -600 -950 0 ; 0 -950 0 ; 600 -950 0 ; 0 950 0 ; -600 950 0 ; 600 950 0 ; -500 -850 0 ; 0 -850 0 ; 500 -850 0 ; 0 850 0 ; -500 850 0 ; 500 850 0 ; -400 -750 0 ; 0 -750 0 ; 400 -750 0 ; 0 750 0 ; -400 750 0 ; 400 750 0 ; -300 -650 0 ; 0 -650 0 ; 300 -650 0 ; 0 650 0 ; -300 650 0 ; 300 650 0 ; -200 -550 0 ; 0 -550 0 ; 200 -550 0 ; 0 550 0 ; -200 550 0 ; 200 550 0 ; -100 -450 0 ; 0 -450 0 ; 100 -450 0 ; 0 450 0 ; -100 450 0 ; 100 450 0 ; 0 -350 0 ; 0 -350 0 ; 0 -350 0 ; 0 350 0 ; 0 350 0 ; 0 350 0 ; 100 -250 0 ; 0 -250 0 ; -100 -250 0 ; 0 250 0 ; 100 250 0 ; -100 250 0], 3.7, [80.5 60], [320 240]);
-            
-            pixelValuesCalibrationPoints = [336 469 ; 66 184 ; 336 183 ; 612 180 ; 119 9 ; 558 0 ];
-
-%             [calibrationPoints, pixelValuesCalibrationPoints] = services.Images.getCalibrationPoints(); 
             
             if ~exist('u0','var') 
-                rMax = focusLength*tan(thetaMax);
-                [mu, mv, u0, v0] = C.getPixelsMappingModel(rMax, imageSize);
+                [mu, mv, u0, v0] = C.getPixelsMappingModel(imageSize, cameraNumber);
             end
 
             % Get pixel values of calibrationPoint from the image
             xUnitSphere = [];
             length(pixelValuesCalibrationPoints)
             for i1 = 1:length(pixelValuesCalibrationPoints)
-%                     [x, y] = C.getSensorPosition(pixelValuesCalibrationPoints(i1, :), mu, mv, u0, v0);
-%                     [r, phi] = services.Math.getPolarCoordinates([x y]);
-%                     theta = atan2(r,focusLength);
-                    xUnitSphere(i1, :) = [
-                        pixelValuesCalibrationPoints(i1, 1) 
-                        pixelValuesCalibrationPoints(i1, 2)
-                        1
-                    ];
+                xUnitSphere(i1, :) = [
+                    pixelValuesCalibrationPoints(i1, 1) 
+                    pixelValuesCalibrationPoints(i1, 2)
+                    1
+                ];
             end
 
             A = [];
@@ -142,7 +136,7 @@ classdef Cameras
 
             gradientSize = 9;
             % Optimize
-            for iterations = 1:400000
+            for iterations = 1:800000
                 finalGradient = zeros(1,gradientSize);
                 errorValue = 0;
                 for i1 = 1:length(pixelValuesCalibrationPoints)
@@ -203,6 +197,8 @@ classdef Cameras
             fprintf(fileName2, '%f %d %d %d %f', [ focusLength round(thetaMax*(360/pi)) chamberSize(1) chamberSize(2) error/i1 ]);
             fclose(fileName2);
             
+            errorValue
+
             angles
             t
             parameters = [
@@ -211,7 +207,7 @@ classdef Cameras
                 mv 
                 u0 
                 v0
-            ];
+            ]
         end 
         
         function pixelPosition = calculatePosition(position)
@@ -235,14 +231,17 @@ classdef Cameras
             end
         end
         
-        function [mu, mv, u0, v0] = getPixelsMappingModel(C, rMax, imageSize)
+        function [mu, mv, u0, v0] = getPixelsMappingModel(C, imageSize, cameraNumber)
             a = imageSize(1);
             b = imageSize(2);
             
-            mu = 118;
-            mv = 118;
-%             mu = a/(2*rMax);
-%             mv = b/(2*rMax);
+            if(cameraNumber == 1)
+                mu = 165;
+                mv = 168;
+            else
+                mu = 141;
+                mv = 146;
+            end
             u0 = a/2;
             v0 = b/2;
         end
@@ -276,7 +275,7 @@ classdef Cameras
             I = M*F;
 
             error = 1;
-            while (error > 0.0001)
+            while (error > 0.00001)
                 V = inv(T)*(inv(I)*[m(1) ; m(2) ; 1] - lambda*z*[R(1, 3) ; R(2, 3) ; R(3, 3)]);
                 oldLambda = lambda;
                 lambda = V(3);
@@ -491,41 +490,132 @@ classdef Cameras
 %             
 %             gradient(6*viewsLength + 9) = (errorValue - neutralErrorValue)/delta;  
         end
-        function topographicMap = generateTopographicMap(C, img, chamberSize, cameraNumber)
+        function [realTopographicMap, topographicMap] = generateTopographicMap(C, img, chamberSize, objectNumber, cameraNumber)
+            sizeImage = size(img);
+            img = imgaussfilt(img,2);
             img = rgb2gray(img);
-            figure;
-            imshow(img);           
-            BW1 = edge(img,'sobel');
-            figure;
-            imshow(BW1);
-            se90 = strel('line',10,90);
-            se0 = strel('line',10,0);
-            BWsdil = imdilate(BW1,[se90 se0]);
-            BWdfill = imfill(BWsdil,'holes');
-            img = bwareafilt(BWdfill, 3);
-            imageSize = size(img);
-            
-            img = imcomplement(img);
-            
-            topographicMap = zeros(chamberSize(2), chamberSize(1));
-            for i=1:chamberSize(1)
-                porcentage = 100*i/chamberSize(1)
-                for j=1:chamberSize(2)
-                    floorPixelPosition = C.getRealPixelPosition(cameraNumber, [j - chamberSize(2)/2 ; i - chamberSize(1)/2 ; 0]);
+            img = edge(img, 'Sobel');
+            realTopographicMap = zeros(chamberSize(2), chamberSize(1));
+            for i=1:chamberSize(2)
+                percentage = 50*i/chamberSize(2)
+                for j=1:chamberSize(1)
+                    floorPixelPosition = C.getRealPixelPosition(cameraNumber, [j - chamberSize(1)/2 ; i - chamberSize(2)/2 ; 0]);
                     floorPixelPosition = round(floorPixelPosition);
-                    pixelPosition = C.getRealPixelPosition(cameraNumber, [j - chamberSize(2)/2 ; i - chamberSize(1)/2 ; 220]);
-                    pixelPosition = round(pixelPosition);
-                    if((pixelPosition(2) < 1 || pixelPosition(1) < 1) || (pixelPosition(2) > imageSize(1) || pixelPosition(1) > imageSize(2)))
-                        topographicMap(i, j) = 0;
-                    else
-                        if(img(floorPixelPosition(2), floorPixelPosition(1)) == 1)
-                            topographicMap(i, j) = 1;
-                        else
-                            topographicMap(i, j) = 0;
-                        end
+                    if((floorPixelPosition(2) >= 1 && floorPixelPosition(1) >= 1) && (floorPixelPosition(2) <= sizeImage(1) && floorPixelPosition(1) <= sizeImage(2)))
+                        realTopographicMap(i,j) = img(floorPixelPosition(2), floorPixelPosition(1)); 
                     end
                 end            
             end
+            figure;
+            imshow(realTopographicMap);
+            impixelinfo;
+
+            se90 = strel('line',40,90);
+            se0 = strel('line',40,0);
+            realTopographicMap = imdilate(realTopographicMap ,[se90 se0]);
+            
+            figure;
+            imshow(realTopographicMap);
+            impixelinfo;
+            
+            realTopographicMap = bwareafilt(im2bw(realTopographicMap), objectNumber);
+            realTopographicMap = imcomplement(realTopographicMap); 
+            
+            figure;
+            imshow(realTopographicMap);
+            impixelinfo;
+            
+            topographicMap = zeros(chamberSize(2), chamberSize(1));            
+            for i=300:chamberSize(2) - 300
+                percentage = 50 + 50*(i - 300)/(chamberSize(2) - 600)
+                for j=300:chamberSize(1) - 300
+                    if(realTopographicMap(i,j) == 0)
+                        for theta = 0:(pi/50):2*pi
+                            circlePosition = [i j] + 185*[cos(theta) sin(theta)];
+                            circlePosition(1) = floor(circlePosition(1));
+                            circlePosition(2) = floor(circlePosition(2));
+                            if((circlePosition(1) >= 1 && circlePosition(2) >= 1) && (circlePosition(1) <= chamberSize(2) && circlePosition(2) <= chamberSize(1)))
+                                topographicMap(circlePosition(1), circlePosition(2)) = 1;                      
+                            end
+                        end  
+                    end    
+                end       
+            end
+
+            topographicMap = imfill(topographicMap,'holes');
+            topographicMap = imcomplement(topographicMap);
+            
+            for i=1:chamberSize(2)
+                for j=1:chamberSize(1)
+                    if(i <= 300 || i >= (chamberSize(2) - 300) || j <= 300 || j >= (chamberSize(1) - 300))
+                        topographicMap(i, j) = 0; 
+                    end
+                end     
+            end
+            
+            realTopographicMap = imfill(imcomplement(realTopographicMap),'holes');   
+            realTopographicMap = imcomplement(realTopographicMap);   
+            
+            figure;
+            imshow(realTopographicMap);
+            impixelinfo;
+            figure;
+            imshow(topographicMap);
+            impixelinfo;
+            
+%             figure;
+%             imshow(topographicMap);
+%             impixelinfo;
+%             img = rgb2gray(img);
+%             figure;
+%             imshow(img);           
+%             BW1 = edge(img,'sobel');
+%             figure;
+%             imshow(BW1);
+%             se90 = strel('line',10,90);
+%             se0 = strel('line',10,0);
+%             BWsdil = imdilate(BW1,[se90 se0]);
+%             BWdfill = imfill(BWsdil,'holes');
+%             img = bwareafilt(BWdfill, 3);
+%             imageSize = size(img);
+%             
+%             img = imcomplement(img);
+%             
+%             topographicMap = zeros(chamberSize(2), chamberSize(1));
+%             for i=1:chamberSize(1)
+%                 porcentage = 100*i/chamberSize(1)
+%                 for j=1:chamberSize(2)
+%                     floorPixelPosition = C.getRealPixelPosition(cameraNumber, [j - chamberSize(2)/2 ; i - chamberSize(1)/2 ; 0]);
+%                     floorPixelPosition = round(floorPixelPosition);
+%                     pixelPosition = C.getRealPixelPosition(cameraNumber, [j - chamberSize(2)/2 ; i - chamberSize(1)/2 ; 220]);
+%                     pixelPosition = round(pixelPosition);
+%                     if((pixelPosition(2) < 1 || pixelPosition(1) < 1) || (pixelPosition(2) > imageSize(1) || pixelPosition(1) > imageSize(2)))
+%                         topographicMap(i, j) = 0;
+%                     else
+%                         if(img(floorPixelPosition(2), floorPixelPosition(1)) == 1)
+%                             topographicMap(i, j) = 1;
+%                         else
+%                             topographicMap(i, j) = 0;
+%                         end
+%                     end
+%                 end            
+%             end
+        end
+        
+        function cameras = getCameras(C)
+            camera1 = videoinput('winvideo', 'Logitech Webcam C930e');
+            camera2 = videoinput('winvideo', 'Logitech Webcam Pro 9000');
+            triggerconfig(camera1, 'manual');
+            triggerconfig(camera2, 'manual');
+            src = getselectedsource(camera1);
+            src.FocusMode = 'manual';
+%             src.Exposure = -6;
+            src = getselectedsource(camera2);
+            src.FocusMode = 'manual';
+            start(camera1);
+            start(camera2);
+            
+            cameras = [camera1 camera2];
         end
     end
 end

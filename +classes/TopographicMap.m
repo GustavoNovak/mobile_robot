@@ -17,7 +17,7 @@ classdef TopographicMap
             response = false;
             mapSize = size(T.map);
             if ((robotPosition(1) > -mapSize(2)/2 && robotPosition(2) > -mapSize(1)/2) && (robotPosition(2) < mapSize(1)/2 && robotPosition(1) < mapSize(2)/2))
-                if (T.map(robotPosition(2) + mapSize(1)/2, robotPosition(1) + mapSize(2)/2) == 1)
+                if (T.map(robotPosition(2) + mapSize(1)/2, robotPosition(1) + mapSize(2)/2) == 255)
                     response = true;
                 end
             end
@@ -50,18 +50,18 @@ classdef TopographicMap
         
         % Setters
         function T = set.map(T, value)
-            if (services.Validator.isImage(value, ''))
+%             if (services.Validator.isImage(value, ''))
                 T.map = value;
-            else
-                error('Invalid image');
-            end
+%             else
+%                 error('Invalid image');
+%             end
         end
         function T = set.realMap(T, value)
-            if (services.Validator.isImage(value, ''))
+%             if (services.Validator.isImage(value, ''))
                 T.realMap = value;
-            else
-                error('Invalid image');
-            end
+%             else
+%                 error('Invalid image');
+%             end
         end
         function T = set.robot(T, value)
             if (services.Validator.isClass(value, 'classes.Robot'))

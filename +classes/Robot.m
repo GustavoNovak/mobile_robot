@@ -26,17 +26,10 @@ classdef Robot
             write(R.connection, data);
         end
         
-        function [x, y, phi] = getPosition(R, robotPosition, camerasClass, cameras)
-            tic;
-            [x, y, phi] = camerasClass.getRobotPosition(robotPosition, cameras);
-            x = x + 75*cos(phi);
-            y = y + 75*sin(phi);
-            if (x > -9000 && y > -9000)
-                plot(x, y, 'o'); 
-            else
-                plot(0, 0, 'o'); 
-            end
-            t = toc
+        function [x, y, phi] = getPosition(R, robotPosition, camerasClass, cameras, velocity, timer, countSettedVelocity)
+            [x, y, phi] = camerasClass.getRobotPosition(robotPosition, cameras, velocity, timer, countSettedVelocity, R);
+            x = x + 60*cos(phi);
+            y = y + 60*sin(phi);
         end
         
         function mesh = generateToolZone(R, toolZone)

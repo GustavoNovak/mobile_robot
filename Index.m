@@ -6,60 +6,77 @@ classdef Index
         function Index = Index() 
         end
         
-        function topographicMap = generateTopographicMap(cameras)
+        function [mergedRealTopographicMap, mergedTopographicMap] = generateTopographicMap(cameras, chamberSize, objectsNumber)
+            tic;
             camerasClass = classes.Cameras();
-            img1 = getsnapshot(cameras(1));
-            img2 = getsnapshot(cameras(2));
-            topographicMap1 = camerasClass.generateTopographicMap(img1, [2780 2900], 1);
-            topographicMap2 = camerasClass.generateTopographicMap(img2, [2780 2900], 2);
-            topographicMap = zeros(2900,2780);
-            for i = 1:2900
-                for j = 1:2780
-                    if(topographicMap1(i,j) == 1 || topographicMap2(i,j) == 1)
-                        topographicMap(i,j) = 1;
+            camerasLength = length(cameras);
+            
+            realTopographicMap = cell(camerasLength, 1);
+            topographicMap = cell(camerasLength, 1);
+            for i = 1:camerasLength
+                if(i == 1)
+                    img = getsnapshot(cameras(1));
+                else
+                    img = getsnapshot(cameras(2));
+                end
+                [realTopographicMap{i}, topographicMap{i}] = camerasClass.generateTopographicMap(img, chamberSize, objectsNumber, i);
+            end
+            
+            mergedRealTopographicMap = zeros(chamberSize(2), chamberSize(1));
+            mergedTopographicMap = zeros(chamberSize(2), chamberSize(1));
+            for i = 1:chamberSize(2)I
+                for j = 1:chamberSize(1)
+                    realOccupiedRegion = true;
+                    occupiedRegion = true;
+                    for k = 1:camerasLength
+                        aux1 = realTopographicMap{k};
+                        aux2 = topographicMap{k};
+                        if(aux1(i,j) == 1)
+                            realOccupiedRegion = false;
+                        end
+                        if(aux2(i,j) == 1)
+                            occupiedRegion = false;
+                        end
+                    end
+                    if(realOccupiedRegion)
+                        mergedRealTopographicMap(i,j) = 1;
+                    end
+                    if(occupiedRegion)
+                        mergedTopographicMap(i,j) = 1;
                     end
                 end
             end
-            imwrite(topographicMap,'storage/real_topographic_map.png');
             
-            imageToVerify = topographicMap;
-            for i=1:2900
-                for j=1:2780
-                    if (imageToVerify(i,j) == 0)
-                        for theta = 0:(pi/20):2*pi
-                            circlePosition = [i j] + 185*[cos(theta) sin(theta)];
-                            circlePosition(1) = floor(circlePosition(1));
-                            circlePosition(2) = floor(circlePosition(2));
-                            if((circlePosition(1) >= 1 && circlePosition(1) <= 2900) && (circlePosition(2) >= 1 && circlePosition(2) <= 2780))
-                                topographicMap(circlePosition(1), circlePosition(2)) = 0;
-                            end
-                        end                            
-                    end
-                end     
-            end
+            imwrite(imcomplement(mergedRealTopographicMap),'storage/real_topographic_map.png');
+            imwrite(imcomplement(mergedTopographicMap),'storage/topographic_map.png');
+
+            figure;
+            imshow(imcomplement(mergedTopographicMap));
+            impixelinfo;
+            figure;
+            imshow(imcomplement(mergedRealTopographicMap));
+            impixelinfo;
             
-            imwrite(topographicMap,'storage/topographic_map.png');
+            t = toc
         end
         
-        function testPID(position)
+        function testPID(position, camerasClass, cameras)
             system('start /min interface_cpp.exe');
-            robot = classes.Robot(300, [430 40 0], [430 0], 60, 0.1); 
-            try
+            robot = classes.Robot(300, [450 40 0], [450 0], 60, 0.1); 
+%             try
                 topographicMap = classes.TopographicMap(robot);
-                preview(robot.cameras.cameras(2));
-                imagesc([-1000 1000], [-1350 1350], topographicMap.map);
+                preview(cameras(1));
+                preview(cameras(2));
+                imagesc([-1390 1390], [-1490 1490], topographicMap.map);
                 hold on;
-                robot.getPosition();
                 plot(-175, 0, 'o');
                 robotController = classes.RobotController(robot, position);
-                robotController.moveInPath()
-                robot.cameras.delete();
+                robotController.moveInPath(camerasClass, cameras);
                 system('TASKKILL -f -im "interface_cpp.exe"');
-            catch e
-                robot.cameras.delete();
-                system('TASKKILL -f -im "interface_cpp.exe"');
-                fprintf(1,'There was an error! The message was:\n%s',e.message);                
-            end
+%             catch e
+%                 system('TASKKILL -f -im "interface_cpp.exe"');
+%                 fprintf(1,'There was an error! The message was:\n%s',e.message);                
+%             end
         end
         
         function moveRobot(V)
@@ -72,15 +89,16 @@ classdef Index
         
         function generatePath(cameras)
             system('start /min interface_cpp.exe');
-            robot = classes.Robot(300, [430 40 0], [430 0], 90, 0.15);    
+            robot = classes.Robot(300, [450 40 0], [450 0], 90, 0.15);    
             try
                 camerasClass = classes.Cameras();
-                measurement = classes.Measurement('mesh', [800 880], [2400 2800]);
+                measurement = classes.Measurement('mesh', [900 900], [2780 2800]);
                 topographicMap = classes.TopographicMap(robot);
                 imagesc([-1390 1390], [-1450 1450], topographicMap.map);
                 hold on;
                 path = classes.Path(topographicMap, measurement, robot);
-                [x, y, phi] = robot.getPosition([0 0], camerasClass, cameras);
+                timer = tic;
+                [x, y, phi] = robot.getPosition([0 0], camerasClass, cameras, [0 0 0], timer, 0);
                 points = path.generate([x y phi], camerasClass);
                 services.Storage.storePath(points); 
             catch e 
@@ -96,7 +114,7 @@ classdef Index
             preview(cameras(2));
             
             system('start /min interface_cpp.exe');
-            robot = classes.Robot(300, [430 40 0], [430 0], 90, 0.15);    
+            robot = classes.Robot(300, [450 40 0], [450 0], 90, 0.15);    
             try
                 path = services.Storage.getPath();
             catch e
