@@ -58,192 +58,158 @@ classdef Cameras
             end
         end
         
-        function parameters = calibrate(C, focusLength, thetaMax, chamberSize, cameraNumber, cameras)
-            % Inform the calibration points here
-            [calibrationPoints, pixelValuesCalibrationPoints, imageSize] = services.Images.getCalibrationPoints(cameraNumber, cameras, chamberSize);
-            calibrationPoints = [-1390 -1450 0 ; 1390 -1450 0 ; -1390 1450 0 ; 1390 1450 0];
-            if(cameraNumber == 1)
-                pixelValuesCalibrationPoints = [103 547 ; 870 559 ; 255 5 ; 740 19]; 
-            else
-                pixelValuesCalibrationPoints = [117 10 ; -15 460 ; 557 3 ; 694 470]; 
-            end
+        function parameters = calibrate(C, chamberSize, cameras)
+            % Get pixel valus and calibration points
+%             [calibrationPoints, pixelValuesCalibrationPoints, imageSize] = services.Images.getCalibrationPoints(cameraNumber, cameras, chamberSize);
+            calibrationPoints{1} = [-1390 -1450 0 ; 1390 -1450 0 ; -1390 1450 0 ; 1390 1450 0];
+            calibrationPoints{2} = [-1390 -1450 0 ; 1390 -1450 0 ; -1390 1450 0 ; 1390 1450 0];
+            pixelValuesCalibrationPoints{1} = [103 547 ; 870 559 ; 255 5 ; 740 19]; 
+            pixelValuesCalibrationPoints{2} = [117 10 ; -15 460 ; 557 3 ; 694 470]; 
 
             numberPoints = size(calibrationPoints);
             numberPoints = numberPoints(1);
             
-            if ~exist('u0','var') 
-                [mu, mv, u0, v0] = C.getPixelsMappingModel(imageSize, cameraNumber);
+            % Get measured pixel values of calibrationPoint from the image
+            if ~exist('u0','var')
+                for cameraNumber = 1:length(cameras) 
+                    if(cameraNumber == 1)
+                        fx(cameraNumber) = 610.5;
+                        fy(cameraNumber) = 621.6;
+                        u0(cameraNumber) = 1024/2;
+                        v0(cameraNumber) = 576/2;
+                    else
+                        imageSize = [640 480];
+                        fx(cameraNumber) = 521.7;
+                        fy(cameraNumber) = 540.2;
+                        u0(cameraNumber) = 640/2;
+                        v0(cameraNumber) = 480/2;
+                    end
+                end
             end
 
-            % Get pixel values of calibrationPoint from the image
-            xUnitSphere = [];
-            length(pixelValuesCalibrationPoints)
-            for i1 = 1:length(pixelValuesCalibrationPoints)
-                xUnitSphere(i1, :) = [
-                    pixelValuesCalibrationPoints(i1, 1) 
-                    pixelValuesCalibrationPoints(i1, 2)
-                    1
-                ];
-            end
-
-            A = [];
-            countA = 0;
-            for i1 = 1:length(pixelValuesCalibrationPoints)
-                if(calibrationPoints(i1, 3) == 0) 
-                    xp = calibrationPoints(i1, 1);
-                    yp = calibrationPoints(i1, 2);
+            % Get measured pixel values of calibrationPoint from the image
+            measuredPixelValues = [];
+            
+            for cameraNumber = 1:length(cameras) 
+                for i = 1:length(pixelValuesCalibrationPoints{1})
+                    measuredPixelValues{cameraNumber}(i, :) = [
+                        pixelValuesCalibrationPoints{cameraNumber}(i, 1) 
+                        pixelValuesCalibrationPoints{cameraNumber}(i, 2)
+                        1
+                    ];
+                end
+                
+                countA = 0;
+                for i = 1:length(pixelValuesCalibrationPoints{1})
+                    xp = calibrationPoints{cameraNumber}(i, 1);
+                    yp = calibrationPoints{cameraNumber}(i, 2);
                     zp = 1;
 
-                    xus = xUnitSphere(i1, 1);
-                    yus = xUnitSphere(i1, 2);
-                    zus = xUnitSphere(i1, 3);
+                    xus = measuredPixelValues{cameraNumber}(i, 1);
+                    yus = measuredPixelValues{cameraNumber}(i, 2);
+                    zus = measuredPixelValues{cameraNumber}(i, 3);
 
                     countA = countA + 1;
-                    A(countA, :) = [0 0 0 -xp*zus -yp*zus -zp*zus xp*yus yp*yus zp*yus];
+                    A{cameraNumber}(countA, :) = [0 0 0 -xp*zus -yp*zus -zp*zus xp*yus yp*yus zp*yus];
                     countA = countA + 1;
-                    A(countA, :) = [xp*zus yp*zus zp*zus 0 0 0 -xp*xus -yp*xus -zp*xus];
-                end 
-            end
-            [U,S,V] = svd(A);
-            h = V(:, end);
-            H = [h(1) h(2) h(3) ; h(4) h(5) h(6) ; h(7) h(8) h(9)];
-            
-            M = [mu 0 u0 ; 0 mv v0 ; 0 0 1];
-            F = [focusLength 0 0 ; 0 focusLength 0 ; 0 0 1];
-            B = inv(M*F)*H;
-            lambda = sign(B(3, 3))/norm([B(1, 1) ; B(2, 1) ; B(3, 1)]);
-
-            r1 = lambda*[B(1, 1) ; B(2, 1) ; B(3, 1)];
-            r2 = lambda*[B(1, 2) ; B(2, 2) ; B(3, 2)];
-            r3 = cross(r1, r2);
-
-            Q = [r1 r2 r3];
-            [U,S,V] = svd(Q);
-            R = U*V';
-
-            tUnique = lambda*[B(1, 3) ; B(2, 3) ; B(3, 3)];
-
-            t = [
-                tUnique(1)
-                tUnique(2) 
-                tUnique(3)
-            ]
-            angles = [
-                -asin(R(3, 1)) 
-                atan2((R(3, 2)/cos(-asin(R(3, 1)))),(R(3, 3)/cos(-asin(R(3, 1))))) 
-                atan2((R(2, 1)/cos(-asin(R(3, 1)))),(R(1, 1)/cos(-asin(R(3, 1)))))
-            ]
-
-            gradientSize = 9;
-            % Optimize
-            for iterations = 1:800000
-                finalGradient = zeros(1,gradientSize);
-                errorValue = 0;
-                for i1 = 1:length(pixelValuesCalibrationPoints)
-                    X = [calibrationPoints(i1, 1) ; calibrationPoints(i1, 2) ; calibrationPoints(i1, 3)];
-                    [gradient, singleErrorValue] = C.calculateGradient(X, angles, t, focusLength, [mu mv u0 v0], pixelValuesCalibrationPoints(i1, :));
-                    finalGradient = finalGradient + gradient;
-                    errorValue = errorValue + singleErrorValue;
-                end 
-                errorValue
-                step = 1/5000000;
-
-                for j=1:3
-                    angles(j) = angles(j) - step*finalGradient(j);
-                    t(j) = t(j) - step*finalGradient(j + 3);
+                    A{cameraNumber}(countA, :) = [xp*zus yp*zus zp*zus 0 0 0 -xp*xus -yp*xus -zp*xus];
                 end
-%                     focusLength = focusLength - step*finalGradient(7);
-    %                 k1 = k1 - step*finalGradient(6*viewsLength+1);
-    %                 k2 = k2 - step*finalGradient(6*viewsLength+2);
-    %                 k3 = k3 - step*finalGradient(6*viewsLength+3);
-    %                 k4 = k4 - step*finalGradient(6*viewsLength+4);
-    %                 k5 = k5 - step*finalGradient(6*viewsLength+5);
-                mu = mu - step*finalGradient(8);
-                mv = mv - step*finalGradient(9);
-    %                 u0 = u0 - step*finalGradient(6*viewsLength+8);
-    %                 v0 = v0 - step*finalGradient(6*viewsLength+9);
-            end
-            [calibrationPointsNumber, n] = size(calibrationPoints);
-            errorValue = (errorValue/calibrationPointsNumber)^(0.5);
-            % Storing parameters
-            warning('off', 'MATLAB:MKDIR:DirectoryExists');
-            mkdir storage;
-            fileName = fopen(strcat('storage/camera_calibration_', num2str(cameraNumber), '.dat'),'w');
-            fileName2 = fopen(strcat('storage/input_cameras_calibration_', num2str(cameraNumber), '.dat'),'w');
-            calibrationData = [
-                angles(1) angles(2) angles(3) t(1) t(2) t(3) focusLength mu mv u0 v0 
-            ];
-            fprintf(fileName, '%f %f %f %f %f %f %f %f %f %d %d', calibrationData);
-            fclose(fileName);
-            
-            C.parameters(cameraNumber, 1) = angles(1);
-            C.parameters(cameraNumber, 2) = angles(2);
-            C.parameters(cameraNumber, 3) = angles(3);
-            C.parameters(cameraNumber, 4) = t(1);
-            C.parameters(cameraNumber, 5) = t(2);
-            C.parameters(cameraNumber, 6) = t(3);
-            C.parameters(cameraNumber, 7) = focusLength;
-            C.parameters(cameraNumber, 8) = mu;
-            C.parameters(cameraNumber, 9) = mv;
-            C.parameters(cameraNumber, 10) = u0;
-            C.parameters(cameraNumber, 11) = v0;
-            error = 0;
-            for i1 = 1:length(pixelValuesCalibrationPoints)
-                pixelPosition = [pixelValuesCalibrationPoints(i1, 1) pixelValuesCalibrationPoints(i1, 2)];
-                realPosition = C.getRealPosition(cameraNumber, pixelPosition, 0) - [calibrationPoints(i1, 1) calibrationPoints(i1, 2) 0];
-                error = error + norm(realPosition);
-            end
-            
-            fprintf(fileName2, '%f %d %d %d %f', [ focusLength round(thetaMax*(360/pi)) chamberSize(1) chamberSize(2) error/i1 ]);
-            fclose(fileName2);
-            
-            errorValue
+                
+                [U,S,V] = svd(A{cameraNumber});
+                h = V(:, end);
+                H = [h(1) h(2) h(3) ; h(4) h(5) h(6) ; h(7) h(8) h(9)];
+                       
+                M{cameraNumber} = [fx(cameraNumber) 0 u0(cameraNumber) ; 0 fy(cameraNumber) v0(cameraNumber) ; 0 0 1];
+                B = inv(M{cameraNumber})*H;
+                lambda = sign(B(3, 3))/norm([B(1, 1) ; B(2, 1) ; B(3, 1)]);
 
-            angles
-            t
-            parameters = [
-                focusLength
-                mu 
-                mv 
-                u0 
-                v0
-            ]
+                r1 = lambda*[B(1, 1) ; B(2, 1) ; B(3, 1)];
+                r2 = lambda*[B(1, 2) ; B(2, 2) ; B(3, 2)];
+                r3 = cross(r1, r2);
+
+                Q = [r1 r2 r3];
+                [U,S,V] = svd(Q);
+                R = U*V';
+            
+
+                tUnique = lambda*[B(1, 3) ; B(2, 3) ; B(3, 3)];
+
+                t{cameraNumber} = [
+                    tUnique(1)
+                    tUnique(2) 
+                    tUnique(3)
+                ];
+                angles{cameraNumber} = [
+                    -asin(R(3, 1)) 
+                    atan2((R(3, 2)/cos(-asin(R(3, 1)))),(R(3, 3)/cos(-asin(R(3, 1))))) 
+                    atan2((R(2, 1)/cos(-asin(R(3, 1)))),(R(1, 1)/cos(-asin(R(3, 1)))))
+                ];
+            
+                angles{cameraNumber}
+                t{cameraNumber}
+                M{cameraNumber}
+                calibrationPoints{cameraNumber}
+                pixelValuesCalibrationPoints{cameraNumber}
+            end
+
+            % Optimize
+            step = 0.001;
+            for iterations = 1:5000
+                [gradient, errorValue] = C.calculateGradient(angles, t, M, calibrationPoints, pixelValuesCalibrationPoints);
+                
+                for cameraNumber = 1:length(cameras) 
+                    for j=1:3
+                        t{cameraNumber}(j) = t{cameraNumber}(j) - 100*step*gradient{cameraNumber}(j);
+                        angles{cameraNumber}(j) = angles{cameraNumber}(j) - 0.00001*step*gradient{cameraNumber}(j + 3);
+                    end
+                    M{cameraNumber}(1, 1) = M{cameraNumber}(1, 1) - step*gradient{cameraNumber}(7);
+                    M{cameraNumber}(2, 2) = M{cameraNumber}(2, 2) - step*gradient{cameraNumber}(8);
+                end
+            end
+            
+            for cameraNumber = 1:length(cameras) 
+                t{cameraNumber}
+                angles{cameraNumber}
+                M{cameraNumber}
+                
+                % Storing parameters
+                warning('off', 'MATLAB:MKDIR:DirectoryExists');
+                mkdir storage;
+
+                fileName = fopen(strcat('storage/camera_calibration_', num2str(cameraNumber), '.dat'),'w');
+                fileName2 = fopen(strcat('storage/input_cameras_calibration_', num2str(cameraNumber), '.dat'),'w');
+                calibrationData = [
+                    angles{cameraNumber}(1) angles{cameraNumber}(2) angles{cameraNumber}(3) t{cameraNumber}(1) t{cameraNumber}(2) t{cameraNumber}(3) M{cameraNumber}(1, 1) M{cameraNumber}(2, 2) M{cameraNumber}(1, 3) M{cameraNumber}(2, 3) 
+                ];
+                fprintf(fileName, '%f %f %f %f %f %f %f %f %d %d', calibrationData);
+                fclose(fileName);
+                
+                realError = 0;
+                for pointNumber = 1:length(pixelValuesCalibrationPoints{1})
+                    m = [pixelValuesCalibrationPoints{cameraNumber}(pointNumber, 1) ; pixelValuesCalibrationPoints{cameraNumber}(pointNumber, 2)];
+                    realPosition = C.getRealPosition(m, 0, angles{cameraNumber}, t{cameraNumber}, M{cameraNumber});
+                    realError = realError + (realPosition(1) - calibrationPoints{cameraNumber}(pointNumber, 1))^2 + + (realPosition(2) - calibrationPoints{cameraNumber}(pointNumber, 2))^2;
+                end
+
+                fprintf(fileName2, '%d %d %f', [ chamberSize(1) chamberSize(2) (realError/pointNumber)^0.5 ]);
+                fclose(fileName2);       
+                
+                C.parameters(cameraNumber, 1) = angles{cameraNumber}(1);
+                C.parameters(cameraNumber, 2) = angles{cameraNumber}(2);
+                C.parameters(cameraNumber, 3) = angles{cameraNumber}(3);
+                C.parameters(cameraNumber, 4) = t{cameraNumber}(1);
+                C.parameters(cameraNumber, 5) = t{cameraNumber}(2);
+                C.parameters(cameraNumber, 6) = t{cameraNumber}(3);
+                C.parameters(cameraNumber, 7) = M{cameraNumber}(1, 1);
+                C.parameters(cameraNumber, 8) = M{cameraNumber}(2, 2);
+                C.parameters(cameraNumber, 9) = M{cameraNumber}(1, 3);
+                C.parameters(cameraNumber, 10) = M{cameraNumber}(2, 3);
+            end
         end 
         
         function pixelPosition = calculatePosition(position)
             R = services.Math.getRotationMatrix(2.7949, 0.7192, -1.7821);
             pixelPosition = classes.Cameras.calculatePixelPosition(position, R, [60.8280 ; -35.0087 ; 314.4015], [13.7343 2.1443 0.5921 -0.3506 0.1317], [33.6277 30.5058 203.4397 179.9887])
-        end
-        
-        function [k1, k2, k3, k4, k5] = fittingPolynomialModelToDesiredProjection(C, focusLength, thetaMax, projectionType)
-            theta=0:0.1/180*pi:thetaMax;
-            
-            switch projectionType
-                case 'equidistance'
-                    k1 = focusLength;
-                    k2 = 0; 
-                case 'perspective'
-                    persp=focusLength*tan(theta);
-                    k=functions.polyfitoddlsq(theta,persp,9);
-                    k1=k(9); k2=k(7); k3=k(5); k4=k(3); k5=k(1); 
-                otherwise
-                    error('Invalid Projection type')
-            end
-        end
-        
-        function [mu, mv, u0, v0] = getPixelsMappingModel(C, imageSize, cameraNumber)
-            a = imageSize(1);
-            b = imageSize(2);
-            
-            if(cameraNumber == 1)
-                mu = 165;
-                mv = 168;
-            else
-                mu = 141;
-                mv = 146;
-            end
-            u0 = a/2;
-            v0 = b/2;
         end
         
         function [x, y] = getSensorPosition(C, pixelPosition, mu, mv, u0, v0)
@@ -256,33 +222,31 @@ classdef Cameras
             y = aux(2);
         end
         
-        function realPosition = getRealPosition(C, cameraNumber, m, z)
-            lambda = 1;
-            theta = C.parameters(cameraNumber, 1);
-            psi = C.parameters(cameraNumber, 2);
-            phi = C.parameters(cameraNumber, 3);
-            t = [C.parameters(cameraNumber, 4); C.parameters(cameraNumber, 5); C.parameters(cameraNumber, 6)];
-            focusLength = C.parameters(cameraNumber, 7);
-            mu = C.parameters(cameraNumber, 8);
-            mv = C.parameters(cameraNumber, 9);
-            u0 = C.parameters(cameraNumber, 10);
-            v0 = C.parameters(cameraNumber, 11);
+        function realPosition = getRealPositionWithStoredParameters(C, cameraNumber, m, z)
+            angles = [C.parameters(cameraNumber, 1) C.parameters(cameraNumber, 2) C.parameters(cameraNumber, 3)];
+            t = [C.parameters(cameraNumber, 4) C.parameters(cameraNumber, 5) C.parameters(cameraNumber, 6)];
+            M = [
+                C.parameters(cameraNumber, 7) 0 C.parameters(cameraNumber, 9) ;  
+                0 C.parameters(cameraNumber, 8) C.parameters(cameraNumber, 10) ; 
+                0 0 1 
+            ];
+        
+            realPosition = C.getRealPosition(m, z, angles, t, M);
+        end
+        
+        function realPosition = getRealPosition(C, m, z, angles, t, M)
+            R = services.Math.getRotationMatrix(angles(1), angles(2), angles(3));
             
-            R = services.Math.getRotationMatrix(psi, theta, phi); 
-            T = [R(1, 1) R(1, 2) t(1) ; R(2, 1) R(2, 2) t(2) ; R(3, 1) R(3, 2) t(3)];
-            F = [focusLength 0 0 ; 0 focusLength 0 ; 0 0 1];
-            M = [mu 0 u0 ; 0 mv v0 ; 0 0 1];
-            I = M*F;
-
-            error = 1;
-            while (error > 0.00001)
-                V = inv(T)*(inv(I)*[m(1) ; m(2) ; 1] - lambda*z*[R(1, 3) ; R(2, 3) ; R(3, 3)]);
-                oldLambda = lambda;
-                lambda = V(3);
-                error = abs(lambda - oldLambda);
-            end
-
-            realPosition = [V(1)/V(3) V(2)/V(3) z];
+            M = [M(1, 1) M(1, 2) M(1, 3) 0 ; M(2, 1) M(2, 2) M(2, 3) 0; M(3, 1) M(3, 2) M(3, 3) 0];
+            T = [R(1, 1) R(1, 2) R(1, 3) t(1) ; R(2, 1) R(2, 2) R(2, 3) t(2) ; R(3, 1) R(3, 2) R(3, 3) t(3) ; 0 0 0 1];
+            C = M*T;
+            
+            A = [(C(1, 1) - m(1)*C(3, 1)) (C(1, 2) - m(1)*C(3, 2)) ; (C(2, 1) - m(2)*C(3, 1)) (C(2, 2) - m(2)*C(3, 2))];
+            b = [(-(C(1, 3)*z + C(1, 4)) + m(1)*(C(3, 3)*z + C(3,4))) ; (-(C(2, 3)*z + C(2, 4)) + m(2)*(C(3, 3)*z + C(3,4)))];
+            
+            realPosition = A\b;
+            
+            realPosition = [realPosition(1) realPosition(2) z];
         end
         
         function pixelPosition = getRealPixelPosition(C, cameraNumber, X)
@@ -305,191 +269,141 @@ classdef Cameras
             pixelPosition = [mu 0 ; 0 mv]*sensorPosition + [u0 ; v0];        
         end
         
-        function pixelPosition = calculatePixelPosition(C, X, R, t, focusLength, M)
-%             k1 = K(1);
-%             k2 = K(2);
-%             k3 = K(3);
-%             k4 = K(4);
-%             k5 = K(5);
-            mu = M(1);
-            mv = M(2);
-            u0 = M(3);
-            v0 = M(4);
+        function pixelPosition = calculatePixelPosition(C, X, angles, t, M) 
+            R = services.Math.getRotationMatrix(angles(1), angles(2), angles(3));
             
             Xc = R*X + t;
-            theta = atan2((Xc(1)^2 + Xc(2)^2)^0.5, Xc(3));
-            phi = atan2(Xc(2), Xc(1));
-            r = focusLength*tan(theta);
-            sensorPosition = r*[cos(phi) ; sin(phi)];
-            pixelPosition = [mu 0 ; 0 mv]*sensorPosition + [u0 ; v0];
+            pixelPosition = M*Xc;
+           
+            pixelPosition = [pixelPosition(1) pixelPosition(2)]/pixelPosition(3);
         end
         
-        function [gradient, neutralErrorValue] = calculateGradient(C, X, angles, t, focusLength, M, pixelValuesCalibrationPoint)
+        function [gradient, neutralErrorValue] = calculateGradient(C, angles, t, M, calibrationPoints, pixelValuesCalibrationPoints)
             % Parameters
             delta = 0.0001;
+            sigularityfactor = 1;
             
-            theta = angles(1);
-            psi = angles(2);
-            phi = angles(3); 
-            t = [
-               t(1) ; 
-               t(2) ; 
-               t(3) ; 
-            ];
-            for i=1:6
-                gradient(i) = 0;
+            for cameraNumber = 1:length(pixelValuesCalibrationPoints)
+                p{cameraNumber} = [t{cameraNumber}(1) t{cameraNumber}(2) t{cameraNumber}(3) angles{cameraNumber}(1) angles{cameraNumber}(2) angles{cameraNumber}(3) M{cameraNumber}(1, 1) M{cameraNumber}(2, 2)];
             end
-%             k1 = K(1);
-%             k2 = K(2);
-%             k3 = K(3);
-%             k4 = K(4);
-%             k5 = K(5);
-            mu = M(1);
-            mv = M(2);
-            u0 = M(3);
-            v0 = M(4); 
             
-            R = services.Math.getRotationMatrix(psi, theta, phi);
-            pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-            neutralErrorValue = (pixelPosition(1) - pixelValuesCalibrationPoint(1))^2 + (pixelPosition(2) - pixelValuesCalibrationPoint(2))^2;
+            % Calculating Neutral Error
+            neutralErrorMeasurementValue = 0;
             
-            % psi
-            theta = theta + delta;
-            R = services.Math.getRotationMatrix(psi, theta, phi);
-            pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-            errorValue = (pixelPosition(1) - pixelValuesCalibrationPoint(1))^2 + (pixelPosition(2) - pixelValuesCalibrationPoint(2))^2;
-            theta = theta - delta;
+            % Measurement Part
+            for cameraNumber = 1:length(pixelValuesCalibrationPoints)
+                for pointNumber = 1:length(pixelValuesCalibrationPoints{1})
+                    X = [calibrationPoints{cameraNumber}(pointNumber, 1) ; calibrationPoints{cameraNumber}(pointNumber, 2) ; calibrationPoints{cameraNumber}(pointNumber, 3)];
+                    angles = [p{cameraNumber}(4) p{cameraNumber}(5) p{cameraNumber}(6)];
+                    t = [p{cameraNumber}(1) ; p{cameraNumber}(2) ; p{cameraNumber}(3)];
+                    intrinsicMatrix = [p{cameraNumber}(7) 0 M{cameraNumber}(1, 3) ; 0 p{cameraNumber}(8) M{cameraNumber}(2, 3) ; 0 0 1];
+                    pixelPosition = C.calculatePixelPosition(X, angles, t, intrinsicMatrix);
+                    neutralErrorMeasurementValue = neutralErrorMeasurementValue + (pixelPosition(1) - pixelValuesCalibrationPoints{cameraNumber}(pointNumber, 1))^2 + (pixelPosition(2) - pixelValuesCalibrationPoints{cameraNumber}(pointNumber, 2))^2;
+                end
+                
+                gradient{cameraNumber} = zeros(1, 8);
+            end
+
+            % Singularity Part
+            neutralErrorSingularityValue = 0;
+
+            pointPositions = [];
+            for pointNumber = 1:length(pixelValuesCalibrationPoints{1})
+                pointPositions{pointNumber} = [0 0];
+            end
             
-            gradient(1) = (errorValue - neutralErrorValue)/delta;
+            for cameraNumber = 1:length(pixelValuesCalibrationPoints)
+                for pointNumber = 1:length(pixelValuesCalibrationPoints{1})
+                    m = [pixelValuesCalibrationPoints{cameraNumber}(pointNumber, 1) ; pixelValuesCalibrationPoints{cameraNumber}(pointNumber, 2)];
+                    angles = [p{cameraNumber}(4) p{cameraNumber}(5) p{cameraNumber}(6)];
+                    t = [p{cameraNumber}(1) ; p{cameraNumber}(2) ; p{cameraNumber}(3)];
+                    intrinsicMatrix = [p{cameraNumber}(7) 0 M{cameraNumber}(1, 3) ; 0 p{cameraNumber}(8) M{cameraNumber}(2, 3) ; 0 0 1];
+                    realPosition = C.getRealPosition(m, 0, angles, t, intrinsicMatrix);
+                    pointPositions{pointNumber}(1) = pointPositions{pointNumber}(1) + realPosition(1);
+                    pointPositions{pointNumber}(2) = pointPositions{pointNumber}(2) + realPosition(2);
+                end
+            end    
             
-            % theta
-            psi = psi + delta;
-            R = services.Math.getRotationMatrix(psi, theta, phi);
-            pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-            errorValue = (pixelPosition(1) - pixelValuesCalibrationPoint(1))^2 + (pixelPosition(2) - pixelValuesCalibrationPoint(2))^2;
-            psi = psi - delta;
+            for pointNumber = 1:length(pixelValuesCalibrationPoints{1})
+                pointPositions{pointNumber} = pointPositions{pointNumber}/length(pixelValuesCalibrationPoints);
+            end
             
-            gradient(2) = (errorValue - neutralErrorValue)/delta;
+            for cameraNumber = 1:length(pixelValuesCalibrationPoints)
+                for pointNumber = 1:length(pixelValuesCalibrationPoints{1})
+                    m = [pixelValuesCalibrationPoints{cameraNumber}(pointNumber, 1) ; pixelValuesCalibrationPoints{cameraNumber}(pointNumber, 2)];
+                    angles = [p{cameraNumber}(4) p{cameraNumber}(5) p{cameraNumber}(6)];
+                    t = [p{cameraNumber}(1) ; p{cameraNumber}(2) ; p{cameraNumber}(3)];
+                    intrinsicMatrix = [p{cameraNumber}(7) 0 M{cameraNumber}(1, 3) ; 0 p{cameraNumber}(8) M{cameraNumber}(2, 3) ; 0 0 1];
+                    realPosition = C.getRealPosition(m, 0, angles, t, intrinsicMatrix);
+                    neutralErrorSingularityValue = neutralErrorSingularityValue + (realPosition(1) - pointPositions{pointNumber}(1))^2 + (realPosition(2) - pointPositions{pointNumber}(2))^2;
+                end
+            end
+            neutralErrorMeasurementValue         
+            neutralErrorSingularityValue
+            neutralErrorValue = neutralErrorMeasurementValue + sigularityfactor*neutralErrorSingularityValue;
             
-            % phi
-            phi = phi + delta;
-            R = services.Math.getRotationMatrix(psi, theta, phi);
-            pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-            errorValue = (pixelPosition(1) - pixelValuesCalibrationPoint(1))^2 + (pixelPosition(2) - pixelValuesCalibrationPoint(2))^2;
-            phi = phi - delta;
-            
-            gradient(3) = (errorValue - neutralErrorValue)/delta;
-            
-            % t1
-            t(1) = t(1) + delta;
-            pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-            errorValue = (pixelPosition(1) - pixelValuesCalibrationPoint(1))^2 + (pixelPosition(2) - pixelValuesCalibrationPoint(2))^2;
-            t(1) = t(1) - delta;
-            
-            gradient(4) = (errorValue - neutralErrorValue)/delta;            
-            % t2
-            t(2) = t(2) + delta;
-            pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-            errorValue = (pixelPosition(1) - pixelValuesCalibrationPoint(1))^2 + (pixelPosition(2) - pixelValuesCalibrationPoint(2))^2;
-            t(2) = t(2) - delta;
-            
-            gradient(5) = (errorValue - neutralErrorValue)/delta;  
-            
-            % t3
-            t(3) = t(3) + delta;
-            pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-            errorValue = (pixelPosition(1) - pixelValuesCalibrationPoint(1))^2 + (pixelPosition(2) - pixelValuesCalibrationPoint(2))^2;
-            t(3) = t(3) - delta;
-            
-            gradient(6) = (errorValue - neutralErrorValue)/delta;  
-            
-            % focusLength
-            focusLength = focusLength + delta;
-            pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-            errorValue = (pixelPosition(1) - pixelValuesCalibrationPoint(1))^2 + (pixelPosition(2) - pixelValuesCalibrationPoint(2))^2;
-            focusLength = focusLength - delta;
-            
-            gradient(7) = (errorValue - neutralErrorValue)/delta;
-            
-%             % k1
-%             k1 = k1 + delta;
-%             pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-%             errorValue = pixelPosition - [pixelValuesCalibrationPoint(2) ; pixelValuesCalibrationPoint(3)];
-%             errorValue = norm(errorValue);
-%             k1 = k1 - delta;
-%             
-%             gradient(6*viewsLength + 1) = (errorValue - neutralErrorValue)/delta; 
-%             
-%             % k2
-%             k2 = k2 + delta;
-%             pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-%             errorValue = pixelPosition - [pixelValuesCalibrationPoint(2) ; pixelValuesCalibrationPoint(3)];
-%             errorValue = norm(errorValue);
-%             k2 = k2 - delta;
-%             
-%             gradient(6*viewsLength + 2) = (errorValue - neutralErrorValue)/delta; 
-%             
-%             % k3
-%             k3 = k3 + delta;
-%             pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-%             errorValue = pixelPosition - [pixelValuesCalibrationPoint(2) ; pixelValuesCalibrationPoint(3)];
-%             errorValue = norm(errorValue);
-%             k3 = k3 - delta;
-%             
-%             gradient(6*viewsLength + 3) = (errorValue - neutralErrorValue)/delta; 
-%             
-%             % k4
-%             k4 = k4 + delta;
-%             pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-%             errorValue = pixelPosition - [pixelValuesCalibrationPoint(2) ; pixelValuesCalibrationPoint(3)];
-%             errorValue = norm(errorValue);
-%             k4 = k4 - delta;
-%             
-%             gradient(6*viewsLength + 4) = (errorValue - neutralErrorValue)/delta; 
-%             
-%             % k5
-%             k5 = k5 + delta;
-%             pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-%             errorValue = pixelPosition - [pixelValuesCalibrationPoint(2) ; pixelValuesCalibrationPoint(3)];
-%             errorValue = norm(errorValue);
-%             k5 = k5 - delta;
-%             
-%             gradient(6*viewsLength + 5) = (errorValue - neutralErrorValue)/delta; 
-%             
-            % mu
-            mu = mu + delta;
-            pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-            errorValue = (pixelPosition(1) - pixelValuesCalibrationPoint(1))^2 + (pixelPosition(2) - pixelValuesCalibrationPoint(2))^2;
-            mu = mu - delta;
-            
-            gradient(8) = (errorValue - neutralErrorValue)/delta; 
-            
-            % mv
-            mv = mv + delta;
-            pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-            errorValue = (pixelPosition(1) - pixelValuesCalibrationPoint(1))^2 + (pixelPosition(2) - pixelValuesCalibrationPoint(2))^2;
-            mv = mv - delta;
-            
-            gradient(9) = (errorValue - neutralErrorValue)/delta;   
-%             
-%             % u0
-%             u0 = u0 + delta;
-%             pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-%             errorValue = pixelPosition - [pixelValuesCalibrationPoint(2) ; pixelValuesCalibrationPoint(3)];
-%             errorValue = norm(errorValue);
-%             u0 = u0 - delta;
-%             
-%             gradient(6*viewsLength + 8) = (errorValue - neutralErrorValue)/delta; 
-%             
-%             % v0
-%             v0 = v0 + delta;
-%             pixelPosition = C.calculatePixelPosition(X, R, t, focusLength, [mu mv u0 v0]);
-%             errorValue = pixelPosition - [pixelValuesCalibrationPoint(2) ; pixelValuesCalibrationPoint(3)];
-%             errorValue = norm(errorValue);
-%             v0 = v0 - delta;
-%             
-%             gradient(6*viewsLength + 9) = (errorValue - neutralErrorValue)/delta;  
+            % Calculating Gradient
+            for parameterId = 1:8
+                for cameraNumber = 1:length(pixelValuesCalibrationPoints)
+                    p{cameraNumber}(parameterId) = p{cameraNumber}(parameterId) + delta;
+                    
+                    % Measurement Part 
+                    errorMeasurementValue = 0;
+                    for cameraNumber2 = 1:length(pixelValuesCalibrationPoints)
+                        for pointNumber = 1:length(pixelValuesCalibrationPoints{1})
+                            X = [calibrationPoints{cameraNumber2}(pointNumber, 1) ; calibrationPoints{cameraNumber2}(pointNumber, 2) ; calibrationPoints{cameraNumber2}(pointNumber, 3)];
+                            t = [p{cameraNumber2}(1) ; p{cameraNumber2}(2) ; p{cameraNumber2}(3)];
+                            angles = [p{cameraNumber2}(4) p{cameraNumber2}(5) p{cameraNumber2}(6)];
+                            intrinsicMatrix = [p{cameraNumber2}(7) 0 M{cameraNumber2}(1, 3) ; 0 p{cameraNumber2}(8) M{cameraNumber2}(2, 3) ; 0 0 1];
+                            pixelPosition = C.calculatePixelPosition(X, angles, t, intrinsicMatrix);
+                            errorMeasurementValue = errorMeasurementValue + (pixelPosition(1) - pixelValuesCalibrationPoints{cameraNumber2}(pointNumber, 1))^2 + (pixelPosition(2) - pixelValuesCalibrationPoints{cameraNumber2}(pointNumber, 2))^2;
+                        end
+                    end
+                    
+                    % Singularity Part
+                    errorSingularityValue = 0;
+
+                    pointPositions = [];
+                    for pointNumber = 1:length(pixelValuesCalibrationPoints{1})
+                        pointPositions{pointNumber} = [0 0];
+                    end
+
+                    for cameraNumber2 = 1:length(pixelValuesCalibrationPoints)
+                        for pointNumber = 1:length(pixelValuesCalibrationPoints{1})
+                            m = [pixelValuesCalibrationPoints{cameraNumber2}(pointNumber, 1) ; pixelValuesCalibrationPoints{cameraNumber2}(pointNumber, 2)];
+                            angles = [p{cameraNumber2}(4) p{cameraNumber2}(5) p{cameraNumber2}(6)];
+                            t = [p{cameraNumber2}(1) ; p{cameraNumber2}(2) ; p{cameraNumber2}(3)];
+                            intrinsicMatrix = [p{cameraNumber2}(7) 0 M{cameraNumber2}(1, 3) ; 0 p{cameraNumber2}(8) M{cameraNumber2}(2, 3) ; 0 0 1];
+                            realPosition = C.getRealPosition(m, 0, angles, t, intrinsicMatrix);
+                            pointPositions{pointNumber}(1) = pointPositions{pointNumber}(1) + realPosition(1);
+                            pointPositions{pointNumber}(2) = pointPositions{pointNumber}(2) + realPosition(2);
+                        end
+                    end    
+
+                    for pointNumber = 1:length(pixelValuesCalibrationPoints{1})
+                        pointPositions{pointNumber} = pointPositions{pointNumber}/length(pixelValuesCalibrationPoints);
+                    end
+
+                    for cameraNumber2 = 1:length(pixelValuesCalibrationPoints)
+                        for pointNumber = 1:length(pixelValuesCalibrationPoints{1})
+                            m = [pixelValuesCalibrationPoints{cameraNumber2}(pointNumber, 1) ; pixelValuesCalibrationPoints{cameraNumber2}(pointNumber, 2)];
+                            angles = [p{cameraNumber2}(4) p{cameraNumber2}(5) p{cameraNumber2}(6)];
+                            t = [p{cameraNumber2}(1) ; p{cameraNumber2}(2) ; p{cameraNumber2}(3)];
+                            intrinsicMatrix = [p{cameraNumber2}(7) 0 M{cameraNumber2}(1, 3) ; 0 p{cameraNumber2}(8) M{cameraNumber2}(2, 3) ; 0 0 1];
+                            realPosition = C.getRealPosition(m, 0, angles, t, intrinsicMatrix);
+                            errorSingularityValue = errorSingularityValue + (realPosition(1) - pointPositions{pointNumber}(1))^2 + (realPosition(2) - pointPositions{pointNumber}(2))^2;
+                        end
+                    end
+
+                    errorValue = errorMeasurementValue + sigularityfactor*errorSingularityValue;
+                    
+                    p{cameraNumber}(parameterId) = p{cameraNumber}(parameterId) - delta;
+                    
+                    gradient{cameraNumber}(parameterId) = (errorValue - neutralErrorValue)/delta;
+                end
+            end
         end
+        
         function [realTopographicMap, topographicMap] = generateTopographicMap(C, img, chamberSize, objectNumber, cameraNumber)
             sizeImage = size(img);
             img = imgaussfilt(img,2);

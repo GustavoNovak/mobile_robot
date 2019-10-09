@@ -3,7 +3,7 @@ classdef Math
     end
     
     methods (Static)
-        function R = getRotationMatrix(psi, theta, phi)
+        function R = getRotationMatrix(theta, psi, phi)
             R(1,1) = cos(theta)*cos(phi); 
             R(2,1) = cos(theta)*sin(phi);
             R(3,1) = -sin(theta);
