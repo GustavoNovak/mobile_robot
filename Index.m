@@ -87,7 +87,10 @@ classdef Index
             system('TASKKILL -f -im "interface_cpp.exe"');
         end
         
-        function generatePath(cameras)
+%         
+%               
+% 
+        function generatePath(cameras, )
             system('start /min interface_cpp.exe');
             robot = classes.Robot(300, [450 40 0], [450 0], 90, 0.15);    
             try

@@ -63,8 +63,8 @@ classdef Cameras
 %             [calibrationPoints, pixelValuesCalibrationPoints, imageSize] = services.Images.getCalibrationPoints(cameraNumber, cameras, chamberSize);
             calibrationPoints{1} = [-1390 -1450 0 ; 1390 -1450 0 ; -1390 1450 0 ; 1390 1450 0];
             calibrationPoints{2} = [-1390 -1450 0 ; 1390 -1450 0 ; -1390 1450 0 ; 1390 1450 0];
-            pixelValuesCalibrationPoints{1} = [103 547 ; 870 559 ; 255 5 ; 740 19]; 
-            pixelValuesCalibrationPoints{2} = [117 10 ; -15 460 ; 557 3 ; 694 470]; 
+            pixelValuesCalibrationPoints{1} = [104 547 ; 870 561 ; 254 6 ; 739 21]; 
+            pixelValuesCalibrationPoints{2} = [123 13 ; -7 463 ; 563 1 ; 694 470]; 
 
             numberPoints = size(calibrationPoints);
             numberPoints = numberPoints(1);
