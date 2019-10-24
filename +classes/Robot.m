@@ -28,8 +28,8 @@ classdef Robot
         
         function [x, y, phi] = getPosition(R, robotPosition, camerasClass, cameras, velocity, timer, countSettedVelocity)
             [x, y, phi] = camerasClass.getRobotPosition(robotPosition, cameras, velocity, timer, countSettedVelocity, R);
-            x = x + 60*cos(phi);
-            y = y + 60*sin(phi);
+            x = x + 50*cos(phi);
+            y = y + 50*sin(phi);
         end
         
         function mesh = generateToolZone(R, toolZone)
@@ -37,8 +37,6 @@ classdef Robot
             lengthToolZone = lengthToolZone(1);
             count = 0;
             mesh = [];
-            figure;
-            hold on;
             if(lengthToolZone > 0)
                 for i=1:lengthToolZone
                     heightMax = toolZone(i, 1);

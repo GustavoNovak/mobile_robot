@@ -9,7 +9,8 @@ classdef Index
         function [mergedRealTopographicMap, mergedTopographicMap] = generateTopographicMap(cameras, chamberSize, objectsNumber)
             tic;
             camerasClass = classes.Cameras();
-            camerasLength = length(cameras);
+%             camerasLength = length(cameras);
+            camerasLength = 1;
             
             realTopographicMap = cell(camerasLength, 1);
             topographicMap = cell(camerasLength, 1);
@@ -24,7 +25,7 @@ classdef Index
             
             mergedRealTopographicMap = zeros(chamberSize(2), chamberSize(1));
             mergedTopographicMap = zeros(chamberSize(2), chamberSize(1));
-            for i = 1:chamberSize(2)I
+            for i = 1:chamberSize(2)
                 for j = 1:chamberSize(1)
                     realOccupiedRegion = true;
                     occupiedRegion = true;
@@ -90,26 +91,28 @@ classdef Index
 %         
 %               
 % 
-        function generatePath(cameras, )
+        function generatePath(cameras, dx, dy)
             system('start /min interface_cpp.exe');
+            figure;
+            hold on;
             robot = classes.Robot(300, [450 40 0], [450 0], 90, 0.15);    
-            try
+%             try
                 camerasClass = classes.Cameras();
-                measurement = classes.Measurement('mesh', [900 900], [2780 2800]);
+                measurement = classes.Measurement('mesh', [dx dy], [2780 2800]);
                 topographicMap = classes.TopographicMap(robot);
                 imagesc([-1390 1390], [-1450 1450], topographicMap.map);
                 hold on;
                 path = classes.Path(topographicMap, measurement, robot);
                 timer = tic;
-                [x, y, phi] = robot.getPosition([0 0], camerasClass, cameras, [0 0 0], timer, 0);
+                [x, y, phi] = robot.getPosition([0 0], camerasClass, cameras, [0 0 0], timer, 0)
                 points = path.generate([x y phi], camerasClass);
                 services.Storage.storePath(points); 
-            catch e 
-                close all;
-                msgbox('Before start measurement you need to generate a path');
+%             catch e 
+%                 close all;
+%                 msgbox('One error was found');
                 system('TASKKILL -f -im "interface_cpp.exe"');
-                return;
-            end
+%                 return;
+%             end
         end
         
         function startMeasurement(cameras) 
@@ -129,7 +132,9 @@ classdef Index
             
             camerasClass = classes.Cameras();
             topographicMap = classes.TopographicMap(robot);
+            figure;
             imagesc([-1390 1390], [-1450 1450], topographicMap.realMap);
+            hold on;
             sizePath = size(path);
             for i = 1:(sizePath(1) - 1)
                 plot([path(i, 1) path(i+1, 1)], [path(i, 2) path(i+1, 2)], '*-');

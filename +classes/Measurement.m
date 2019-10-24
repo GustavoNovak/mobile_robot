@@ -75,6 +75,7 @@ classdef Measurement
             end
         end
         function M = set.data(M, value)
+            value
             switch M.type
                 case 'mesh'
                     if (services.Validator.isMatrix(value, [1 2], 'float'))

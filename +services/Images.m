@@ -90,21 +90,37 @@ classdef Images
                 greenIndicator = 0.15;
                 redIndicator = 0.15;     
             else
-                greenIndicator = 0.15;
-                redIndicator = 0.25;                
+                greenIndicator = 0.08;
+                redIndicator = 0.15;                
             end
             
-            for i=(pixelPosition(2)-100):(pixelPosition(2)+100)
+            for i=(pixelPosition(2)-180):(pixelPosition(2)+180)
                 t = toc(timer);
                 if((t - countSettedVelocity*0.2) > 0)
                     countSettedVelocity = countSettedVelocity + 1;
                     robot.setVelocity(velocity);
                 end
-                for j=(pixelPosition(1)-100):(pixelPosition(1)+100)
+                for j=(pixelPosition(1)-180):(pixelPosition(1)+180)
                     if((i >= 1 && i <= imageSize(1)) && (j >= 1 && j <= imageSize(2)))
                         if (strcmp(color, 'green'))
                             indicator = imageValues(i,j,2) - ((imageValues(i,j,1) + imageValues(i,j,3))/2);
-                            if (indicator > greenIndicator) 
+                            if (indicator > greenIndicator && imageValues(i,j,2) > 80/255) 
+                                count = count + 1;
+                                points(count, :) = [i j];
+%                                 for k1 = i:(i+15)
+%                                     for k2 = j:(j+15)
+%                                         image(k1,k2,1) = 255;
+%                                         image(k1,k2,2) = 255;
+%                                         image(k1,k2,3) = 255; 
+%                                     end
+%                                 end
+%                                 image(i,j,1) = 255;
+%                                 image(i,j,2) = 255;
+%                                 image(i,j,3) = 255; 
+                            end
+                        elseif (strcmp(color, 'red'))
+                            indicator = imageValues(i,j,1) - ((imageValues(i,j,2) + imageValues(i,j,3))/2.2);
+                            if (indicator > redIndicator && imageValues(i,j,1) > 80/255)
                                 count = count + 1;
                                 points(count, :) = [i j];
     %                             for k1 = i:(i+15)
@@ -117,41 +133,7 @@ classdef Images
 %                                 image(i,j,1) = 255;
 %                                 image(i,j,2) = 255;
 %                                 image(i,j,3) = 255; 
-                            end
-                        elseif (strcmp(color, 'red'))
-                            if(cameraNumber == 1)
-                                indicator = imageValues(i,j,1) - ((imageValues(i,j,2) + imageValues(i,j,3))/2.2);
-                                if (indicator > redIndicator)
-                                    count = count + 1;
-                                    points(count, :) = [i j];
-        %                             for k1 = i:(i+15)
-        %                                 for k2 = j:(j+15)
-        %                                     image(k1,k2,1) = 255;
-        %                                     image(k1,k2,2) = 255;
-        %                                     image(k1,k2,3) = 255; 
-        %                                 end
-%         %                             end
-%                                     image(i,j,1) = 255;
-%                                     image(i,j,2) = 255;
-%                                     image(i,j,3) = 255; 
-                                end                               
-                            else 
-                                indicator = imageValues(i,j,1) - ((imageValues(i,j,2) + imageValues(i,j,3))/2.2);
-                                if (indicator > redIndicator)
-                                    count = count + 1;
-                                    points(count, :) = [i j];
-        %                             for k1 = i:(i+15)
-        %                                 for k2 = j:(j+15)
-        %                                     image(k1,k2,1) = 255;
-        %                                     image(k1,k2,2) = 255;
-        %                                     image(k1,k2,3) = 255; 
-        %                                 end
-        %                             end
-%                                     image(i,j,1) = 255;
-%                                     image(i,j,2) = 255;
-%                                     image(i,j,3) = 255; 
-                                end   
-                            end
+                            end   
                         end 
                     end
                 end

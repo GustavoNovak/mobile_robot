@@ -27,23 +27,20 @@ classdef Cameras
                 [countRed, xRed, yRed, countSettedVelocity] = services.Images.getCirclePositon(img, 'red', pixelPosition, k1, velocity, timer, countSettedVelocity, robot);
                 [countGreen, xGreen, yGreen, countSettedVelocity] = services.Images.getCirclePositon(img, 'green', pixelPosition, k1, velocity, timer, countSettedVelocity, robot);
                 
-                if (xRed > -10000 && xGreen > -10000 && k1 == 1)
+                if (xRed > -10000 && xGreen > -10000)
                     verificationValue = countRed/countGreen;
-                    if(verificationValue > 0.2 && verificationValue < 5)
-                        realPositionRed = C.getRealPosition(k1, [xRed yRed], 235);
-                        realPositionGreen = C.getRealPosition(k1, [xGreen yGreen], 235);
+                    realPositionRed = C.getRealPositionWithStoredParameters(k1, [xRed yRed], 235);
+                    realPositionGreen = C.getRealPositionWithStoredParameters(k1, [xGreen yGreen], 235);
 
-                        count = count + 1;
-                        x = x + (realPositionRed(1) + realPositionGreen(1))/2;
-                        y = y + (realPositionRed(2) + realPositionGreen(2))/2;
+                    count = count + 1;
+                    x = x + (realPositionRed(1) + realPositionGreen(1))/2;
+                    y = y + (realPositionRed(2) + realPositionGreen(2))/2;
 
-                        vectorPosition = [(realPositionRed(1) - realPositionGreen(1)) ; (realPositionRed(2) - realPositionGreen(2))];
-                        vectorPosition = [0 1 ; -1 0] * vectorPosition;
-                        
-                      
-                        phi = phi + atan2(vectorPosition(2), vectorPosition(1));
-                        break;
-                    end
+                    vectorPosition = [(realPositionRed(1) - realPositionGreen(1)) ; (realPositionRed(2) - realPositionGreen(2))];
+                    vectorPosition = [0 1 ; -1 0] * vectorPosition;
+
+
+                    phi = phi + atan2(vectorPosition(2), vectorPosition(1));
                 end
             end
             
@@ -60,11 +57,12 @@ classdef Cameras
         
         function parameters = calibrate(C, chamberSize, cameras)
             % Get pixel valus and calibration points
-%             [calibrationPoints, pixelValuesCalibrationPoints, imageSize] = services.Images.getCalibrationPoints(cameraNumber, cameras, chamberSize);
+%             [calibrationPoints, pixelValuesCalibrationPoints, imageSize] = services.Images.getCalibrationPoints(1, cameras, chamberSize);
+%             [calibrationPoints, pixelValuesCalibrationPoints, imageSize] = services.Images.getCalibrationPoints(2, cameras, chamberSize);
             calibrationPoints{1} = [-1390 -1450 0 ; 1390 -1450 0 ; -1390 1450 0 ; 1390 1450 0];
             calibrationPoints{2} = [-1390 -1450 0 ; 1390 -1450 0 ; -1390 1450 0 ; 1390 1450 0];
-            pixelValuesCalibrationPoints{1} = [104 547 ; 870 561 ; 254 6 ; 739 21]; 
-            pixelValuesCalibrationPoints{2} = [123 13 ; -7 463 ; 563 1 ; 694 470]; 
+            pixelValuesCalibrationPoints{1} = [103 552 ; 873 569 ; 254 12 ; 740 27]; 
+            pixelValuesCalibrationPoints{2} = [117 14 ; -18 464 ; 556 6 ; 690 473]; 
 
             numberPoints = size(calibrationPoints);
             numberPoints = numberPoints(1);
@@ -254,19 +252,18 @@ classdef Cameras
             psi = C.parameters(cameraNumber, 2);
             phi = C.parameters(cameraNumber, 3);
             t = [C.parameters(cameraNumber, 4); C.parameters(cameraNumber, 5); C.parameters(cameraNumber, 6)];
-            focusLength = C.parameters(cameraNumber, 7);
-            mu = C.parameters(cameraNumber, 8);
-            mv = C.parameters(cameraNumber, 9);
-            u0 = C.parameters(cameraNumber, 10);
-            v0 = C.parameters(cameraNumber, 11);
+            px = C.parameters(cameraNumber, 7);
+            py = C.parameters(cameraNumber, 8);
+            u0 = C.parameters(cameraNumber, 9);
+            v0 = C.parameters(cameraNumber, 10);
             
-            R = services.Math.getRotationMatrix(psi, theta, phi); 
+            R = services.Math.getRotationMatrix(theta, psi, phi); 
             Xc = R*X + t;
-            theta = atan2((Xc(1)^2 + Xc(2)^2)^0.5, Xc(3));
-            phi = atan2(Xc(2), Xc(1));
-            r = focusLength*tan(theta);
-            sensorPosition = r*[cos(phi) ; sin(phi)];
-            pixelPosition = [mu 0 ; 0 mv]*sensorPosition + [u0 ; v0];        
+            M = [px 0 u0 ; 
+                 0 py v0 ; 
+                 0 0 1];
+            pixelPosition = M*Xc;
+            pixelPosition = pixelPosition/pixelPosition(3);
         end
         
         function pixelPosition = calculatePixelPosition(C, X, angles, t, M) 
@@ -410,6 +407,7 @@ classdef Cameras
             img = rgb2gray(img);
             img = edge(img, 'Sobel');
             realTopographicMap = zeros(chamberSize(2), chamberSize(1));
+
             for i=1:chamberSize(2)
                 percentage = 50*i/chamberSize(2)
                 for j=1:chamberSize(1)
@@ -420,24 +418,24 @@ classdef Cameras
                     end
                 end            
             end
-            figure;
-            imshow(realTopographicMap);
-            impixelinfo;
+%             figure;
+%             imshow(realTopographicMap);
+%             impixelinfo;
 
             se90 = strel('line',40,90);
             se0 = strel('line',40,0);
             realTopographicMap = imdilate(realTopographicMap ,[se90 se0]);
             
-            figure;
-            imshow(realTopographicMap);
-            impixelinfo;
+%             figure;
+%             imshow(realTopographicMap);
+%             impixelinfo;
             
             realTopographicMap = bwareafilt(im2bw(realTopographicMap), objectNumber);
             realTopographicMap = imcomplement(realTopographicMap); 
             
-            figure;
-            imshow(realTopographicMap);
-            impixelinfo;
+%             figure;
+%             imshow(realTopographicMap);
+%             impixelinfo;
             
             topographicMap = zeros(chamberSize(2), chamberSize(1));            
             for i=300:chamberSize(2) - 300
@@ -469,51 +467,6 @@ classdef Cameras
             
             realTopographicMap = imfill(imcomplement(realTopographicMap),'holes');   
             realTopographicMap = imcomplement(realTopographicMap);   
-            
-            figure;
-            imshow(realTopographicMap);
-            impixelinfo;
-            figure;
-            imshow(topographicMap);
-            impixelinfo;
-            
-%             figure;
-%             imshow(topographicMap);
-%             impixelinfo;
-%             img = rgb2gray(img);
-%             figure;
-%             imshow(img);           
-%             BW1 = edge(img,'sobel');
-%             figure;
-%             imshow(BW1);
-%             se90 = strel('line',10,90);
-%             se0 = strel('line',10,0);
-%             BWsdil = imdilate(BW1,[se90 se0]);
-%             BWdfill = imfill(BWsdil,'holes');
-%             img = bwareafilt(BWdfill, 3);
-%             imageSize = size(img);
-%             
-%             img = imcomplement(img);
-%             
-%             topographicMap = zeros(chamberSize(2), chamberSize(1));
-%             for i=1:chamberSize(1)
-%                 porcentage = 100*i/chamberSize(1)
-%                 for j=1:chamberSize(2)
-%                     floorPixelPosition = C.getRealPixelPosition(cameraNumber, [j - chamberSize(2)/2 ; i - chamberSize(1)/2 ; 0]);
-%                     floorPixelPosition = round(floorPixelPosition);
-%                     pixelPosition = C.getRealPixelPosition(cameraNumber, [j - chamberSize(2)/2 ; i - chamberSize(1)/2 ; 220]);
-%                     pixelPosition = round(pixelPosition);
-%                     if((pixelPosition(2) < 1 || pixelPosition(1) < 1) || (pixelPosition(2) > imageSize(1) || pixelPosition(1) > imageSize(2)))
-%                         topographicMap(i, j) = 0;
-%                     else
-%                         if(img(floorPixelPosition(2), floorPixelPosition(1)) == 1)
-%                             topographicMap(i, j) = 1;
-%                         else
-%                             topographicMap(i, j) = 0;
-%                         end
-%                     end
-%                 end            
-%             end
         end
         
         function cameras = getCameras(C)

@@ -42,7 +42,6 @@ classdef RobotController
                     count = 1;
                     while (positionError > 10 || angularError > 0.05 || velocityMagnitude > 50)
                         [x_new, y_new, phi_new] = R.robot.getPosition([x y phi], camerasClass, cameras, [Vx Vy Vphi], timer, 0);
-                        toc(timer)
                         deltaT = toc(timer);
                         if (x_new > -10000)
                             x = x + deltaT*Vx_real + 0.2*(x_new -(x + deltaT*Vx_real));
@@ -57,8 +56,10 @@ classdef RobotController
                         
                         if (x > -10000 && y > -10000)
                             plot(x, y, 'o');
+                            hold on;
                         else
                             plot(0, 0, 'o'); 
+                            hold on;
                         end
                         
                         positionError = norm([(R.path(i, 1) - x) (R.path(i, 2) - y)]);
@@ -124,7 +125,6 @@ classdef RobotController
                     count = 1;
                     while (positionError > 10 || angularError > 0.05 || velocityMagnitude > 50 || Vphi > 0.1)
                         [x_new, y_new, phi_new] = R.robot.getPosition([x y phi], camerasClass, cameras, [Vx Vy Vphi], timer, 0);
-                        toc(timer)
                         deltaT = toc(timer);
                         if (x_new > -10000)                            
                             x = x + deltaT*Vx_real + 0.5*(x_new -(x + deltaT*Vx_real));
@@ -139,8 +139,10 @@ classdef RobotController
                         
                         if (x > -10000 || y > -10000)
                             plot(x, y, 'o');
+                            hold on;
                         else
-                            plot(0, 0, 'o'); 
+                            plot(0, 0, 'o');
+                            hold on;
                         end
 
                         positionError = norm([(R.path(i, 1) - x) (R.path(i, 2) - y)]);
@@ -187,7 +189,7 @@ classdef RobotController
                     
                     R.robot.setVelocity([0 0 0]);
                     disp('Measuring...');
-                    pause(5);
+                    pause(1);
                     disp('Measure realized');
                 end
             end
